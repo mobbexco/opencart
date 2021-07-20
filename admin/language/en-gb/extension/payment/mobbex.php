@@ -14,4 +14,5 @@ $_ = [
     'status'           => 'Status',
     'api_key'          => 'API Key',
     'access_token'     => 'Access Token',
+    'test_mode'        => 'Test Mode',
 ];
