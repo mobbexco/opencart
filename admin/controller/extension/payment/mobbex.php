@@ -9,6 +9,9 @@ class ControllerExtensionPaymentMobbex extends Controller
 
     public function index()
     {
+        // First check that it's installed correctly
+        $this->install();
+
         // load models and instance helper
         $this->load->model('setting/setting');
         $this->load->language('extension/payment/mobbex');
@@ -21,6 +24,31 @@ class ControllerExtensionPaymentMobbex extends Controller
             // Show configuration
             $this->showConfig();
         }
+    }
+
+    /**
+     * Create Mobbex tables in database.
+     * 
+     * @return void 
+     */
+    private function install()
+    {
+        $this->db->query(
+            "CREATE TABLE IF NOT EXISTS `" . DB_PREFIX  . "mobbex_transaction` (
+                `cart_id` INT(11) NOT NULL,
+				`data` TEXT NOT NULL,
+				PRIMARY KEY (`cart_id`));"
+        );
+  
+        $this->db->query(
+            "CREATE TABLE IF NOT EXISTS `" . DB_PREFIX  . "mobbex_custom_fields` (
+                `id` INT(11) NOT NULL AUTO_INCREMENT,
+                `row_id` INT(11) NOT NULL,
+                `object` TEXT NOT NULL,
+                `field_name` TEXT NOT NULL,
+                `data` TEXT NOT NULL,
+                PRIMARY KEY (`id`));"
+        );
     }
 
     /**
