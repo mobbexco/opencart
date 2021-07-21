@@ -33,33 +33,33 @@ class MobbexHelper
         if (!empty($data['params']))
             $data['uri'] = $data['uri'] . '?' . http_build_query($data['params']);
 
-		curl_setopt_array($curl, [
-            CURLOPT_URL 		   => self::$apiUrl . $data['uri'],
-			CURLOPT_HTTPHEADER	   => $this->getHeaders(),
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING 	   => "",
-			CURLOPT_MAXREDIRS 	   => 10,
-			CURLOPT_TIMEOUT 	   => 30,
-			CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST  => $data['method'],
-			CURLOPT_POSTFIELDS     => !empty($data['body']) ? json_encode($data) : null,
-		]);
+        curl_setopt_array($curl, [
+            CURLOPT_URL            => self::$apiUrl . $data['uri'],
+            CURLOPT_HTTPHEADER     => $this->getHeaders(),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING       => "",
+            CURLOPT_MAXREDIRS      => 10,
+            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST  => $data['method'],
+            CURLOPT_POSTFIELDS     => !empty($data['body']) ? json_encode($data['body']) : null,
+        ]);
 
-		$response = curl_exec($curl);
-		$error    = curl_error($curl);
+        $response = curl_exec($curl);
+        $error    = curl_error($curl);
 
-		curl_close($curl);
+        curl_close($curl);
 
-		if ($error) {
-			error_log('Curl error in Mobbex request #:' . $error);
-		} else {
-			$result = json_decode($response, true);
+        if ($error) {
+            error_log('Curl error in Mobbex request #:' . $error);
+        } else {
+            $result = json_decode($response, true);
 
-			if ($result['data'])
-				return $result['data'];
-		}
+            if (isset($result['data']))
+                return $result['data'];
+        }
 
-		return false;
+        return false;
     }
 
     /**
@@ -67,15 +67,15 @@ class MobbexHelper
      * 
      * @return string[] 
      */
-    public function getHeaders()
+    private function getHeaders()
     {
-		return [
+        return [
             'cache-control: no-cache',
             'content-type: application/json',
             'x-api-key: ' . $this->config->get('payment_mobbex_api_key'),
             'x-access-token: ' . $this->config->get('payment_mobbex_access_token'),
         ];
-	}
+    }
 
     /**
      * Check if plugin is ready to make requests.
@@ -84,10 +84,23 @@ class MobbexHelper
      */
     public function isReady()
     {
-		$enabled     = $this->config->get('payment_mobbex_status');
-		$apiKey      = $this->config->get('payment_mobbex_api_key');
-		$accessToken = $this->config->get('payment_mobbex_access_token');
+        $enabled     = $this->config->get('payment_mobbex_status');
+        $apiKey      = $this->config->get('payment_mobbex_api_key');
+        $accessToken = $this->config->get('payment_mobbex_access_token');
 
         return ($enabled && !empty($apiKey) && !empty($accessToken));
+    }
+
+    /**
+     * Create token to protect API endpoints.
+     * 
+     * @return string 
+     */
+    public function generateToken()
+    {
+        $apiKey      = $this->config->get('payment_mobbex_api_key');
+        $accessToken = $this->config->get('payment_mobbex_access_token');
+
+        return md5($apiKey . '|' . $accessToken);
     }
 }

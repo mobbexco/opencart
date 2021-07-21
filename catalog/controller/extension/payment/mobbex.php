@@ -39,10 +39,18 @@ class ControllerExtensionPaymentMobbex extends Controller
         // Get return data
         $id     = $this->request->get['order_id'];
         $status = $this->request->get['status'];
+        $token  = $this->request->get['mobbex_token'];
 
         // If is empty, redirect to checkout with error
-        if (empty($id) || empty($status)) {
+        if (empty($id) || empty($status) || empty($token)) {
             $this->session->data['error'] = $this->language->get('callback_error');
+            $this->response->redirect($this->url->link('checkout/checkout'));
+        }
+
+        // If the token is invalid, redirect to checkout with error
+        if ($token != $this->helper->generateToken()) {
+            // Redirect to checkout with error
+            $this->session->data['error'] = $this->language->get('token_error');
             $this->response->redirect($this->url->link('checkout/checkout'));
         }
 
@@ -149,6 +157,7 @@ class ControllerExtensionPaymentMobbex extends Controller
     private function getOrderEndpointUrl($order, $endpoint)
     {
         $args = [
+            'mobbex_token' => $this->helper->generateToken(),
             'platform'     => 'opencart',
             'version'      => $this->helper::$version,
             'order_id'     => $order['order_id']

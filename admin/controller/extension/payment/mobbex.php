@@ -1,6 +1,6 @@
 <?php
 
-require_once '../system/library/mobbex/helper.php';
+require_once DIR_SYSTEM . 'library/mobbex/helper.php';
 
 class ControllerExtensionPaymentMobbex extends Controller
 {
