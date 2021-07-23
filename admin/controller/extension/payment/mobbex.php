@@ -14,6 +14,7 @@ class ControllerExtensionPaymentMobbex extends Controller
 
         // load models and instance helper
         $this->load->model('setting/setting');
+		$this->load->model('localisation/order_status');
         $this->load->language('extension/payment/mobbex');
         $this->helper = new MobbexHelper($this->config);
 
@@ -88,19 +89,30 @@ class ControllerExtensionPaymentMobbex extends Controller
                 ],
             ],
 
-            // Mobbex config fields
-            'payment_mobbex_status'       => $this->getFormConfig('status'),
-            'payment_mobbex_test_mode'    => $this->getFormConfig('test_mode'),
-            'payment_mobbex_api_key'      => $this->getFormConfig('api_key'),
-            'payment_mobbex_access_token' => $this->getFormConfig('access_token'),
+            'mbbx' => [
+                // Mobbex config fields
+                'status'             => $this->getFormConfig('status'),
+                'test_mode'          => $this->getFormConfig('test_mode'),
+                'api_key'            => $this->getFormConfig('api_key'),
+                'access_token'       => $this->getFormConfig('access_token'),
+                'onhold_os'          => $this->getFormConfig('onhold_os'),
+                'approved_os'        => $this->getFormConfig('approved_os'),
+                'failed_os'          => $this->getFormConfig('failed_os'),
+                'rejected_os'        => $this->getFormConfig('rejected_os'),
 
-            'status_label'                => $this->language->get('status'),
-            'test_mode_label'             => $this->language->get('test_mode'),
-            'api_key_label'               => $this->language->get('api_key'),
-            'access_token_label'          => $this->language->get('access_token'),
+                'status_label'       => $this->language->get('status'),
+                'test_mode_label'    => $this->language->get('test_mode'),
+                'api_key_label'      => $this->language->get('api_key'),
+                'access_token_label' => $this->language->get('access_token'),
+                'onhold_os_label'    => $this->language->get('onhold_os'),
+                'approved_os_label'  => $this->language->get('approved_os'),
+                'failed_os_label'    => $this->language->get('failed_os'),
+                'rejected_os_label'  => $this->language->get('rejected_os'),
 
-            // Plugin extra data
-            'plugin_version'              => $this->helper::$version,
+                // Plugin extra data
+                'plugin_version'     => $this->helper::$version,
+                'all_order_statuses' => $this->model_localisation_order_status->getOrderStatuses(),
+            ],
         ];
 
         // Return config view
@@ -139,6 +151,13 @@ class ControllerExtensionPaymentMobbex extends Controller
         if (isset($this->request->post["payment_mobbex_$config"]))
             return $this->request->post["payment_mobbex_$config"];
 
-        return $this->config->get("payment_mobbex_$config");
+        $value = $this->config->get("payment_mobbex_$config");
+
+        // Get default config value
+        $default_configs = new Config();
+        $default_configs->load('mobbex');
+        $default = $default_configs->get("payment_mobbex_$config");
+
+        return $value === null ? $default : $value;
     }
 }

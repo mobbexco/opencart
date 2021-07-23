@@ -28,51 +28,113 @@
             </div>
             <div class="panel-body">
                 <form action="{{ action }}" method="post" enctype="multipart/form-data" id="mobbex_conf" class="form-horizontal">
-                    {# Payment Method Status Field #}
-                    <div class="form-group required">
-                        <label class="col-sm-2 control-label" for="input-status">{{ status_label }}</label>
-                        <div class="col-sm-10">
-                            <select name="payment_mobbex_status" id="input-status" class="form-control">
-                            {% if payment_mobbex_status %}
-                                <option value="1" selected="selected">{{ text_enabled }}</option>
-                                <option value="0">{{ text_disabled }}</option>
-                            {% else %}
-                                <option value="1">{{ text_enabled }}</option>
-                                <option value="0" selected="selected">{{ text_disabled }}</option>
-                            {% endif %}
-                            </select>
-                        </div>
-                    </div>
+                    {# Nav bar #}
+                    <ul class="nav nav-tabs">
+                        <li class="nav-tab active"><a href="#tab_general" data-toggle="tab">{{ mbbx.tabs.general }}</a></li>
+                        <li class="nav-tab"><a href="#tab_order_status" data-toggle="tab">{{ mbbx.tabs.order_status }}</a></li>
+                    </ul>
 
-                    {# Test Mode Field #}
-                    <div class="form-group required">
-                        <label class="col-sm-2 control-label" for="input-status">{{ test_mode_label }}</label>
-                        <div class="col-sm-10">
-                            <select name="payment_mobbex_test_mode" id="input-status" class="form-control">
-                            {% if payment_mobbex_test_mode %}
-                                <option value="1" selected="selected">{{ text_enabled }}</option>
-                                <option value="0">{{ text_disabled }}</option>
-                            {% else %}
-                                <option value="1">{{ text_enabled }}</option>
-                                <option value="0" selected="selected">{{ text_disabled }}</option>
-                            {% endif %}
-                            </select>
-                        </div>
-                    </div>
+                    {# General Tab #}
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="tab_general">
+                            {# Payment Method Status Field #}
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="input-status">{{ mbbx.status_label }}</label>
+                                <div class="col-sm-10">
+                                    <select name="payment_mobbex_status" id="input-status" class="form-control">
+                                    {% if mbbx.status %}
+                                        <option value="1" selected="selected">{{ text_enabled }}</option>
+                                        <option value="0">{{ text_disabled }}</option>
+                                    {% else %}
+                                        <option value="1">{{ text_enabled }}</option>
+                                        <option value="0" selected="selected">{{ text_disabled }}</option>
+                                    {% endif %}
+                                    </select>
+                                </div>
+                            </div>
 
-                    {# API Key Field #}
-                    <div class="form-group required">
-                        <label class="col-sm-2 control-label" for="payment_mobbex_api_key">{{ api_key_label }}</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="payment_mobbex_api_key" name="payment_mobbex_api_key" value="{{ payment_mobbex_api_key }}" />
-                        </div>
-                    </div>
+                            {# Test Mode Field #}
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_mobbex_test_mode">{{ mbbx.test_mode_label }}</label>
+                                <div class="col-sm-10">
+                                    <select name="payment_mobbex_test_mode" id="payment_mobbex_test_mode" class="form-control">
+                                    {% if mbbx.test_mode %}
+                                        <option value="1" selected="selected">{{ text_enabled }}</option>
+                                        <option value="0">{{ text_disabled }}</option>
+                                    {% else %}
+                                        <option value="1">{{ text_enabled }}</option>
+                                        <option value="0" selected="selected">{{ text_disabled }}</option>
+                                    {% endif %}
+                                    </select>
+                                </div>
+                            </div>
 
-                    {# Acess Token Field #}
-                    <div class="form-group required">
-                        <label class="col-sm-2 control-label" for="payment_mobbex_access_token">{{ access_token_label }}</label>
-                        <div class="col-sm-10">
-                            <input type="text" class="form-control" id="payment_mobbex_access_token" name="payment_mobbex_access_token" value="{{ payment_mobbex_access_token }}" />
+                            {# API Key Field #}
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_mobbex_api_key">{{ mbbx.api_key_label }}</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="payment_mobbex_api_key" name="payment_mobbex_api_key" value="{{ mbbx.api_key }}" />
+                                </div>
+                            </div>
+
+                            {# Acess Token Field #}
+                            <div class="form-group required">
+                                <label class="col-sm-2 control-label" for="payment_mobbex_access_token">{{ mbbx.access_token_label }}</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="payment_mobbex_access_token" name="payment_mobbex_access_token" value="{{ mbbx.access_token }}" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Order Status Tab #}
+                        <div class="tab-pane" id="tab_order_status">
+                            {# Order Status On Sucess Field #}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="payment_mobbex_approved_os">{{ mbbx.approved_os_label }}</label>
+                                <div class="col-sm-10">
+                                    <select name="payment_mobbex_approved_os" id="payment_mobbex_approved_os" class="form-control">
+                                    {% for order_status in mbbx.all_order_statuses %}
+                                        <option value="{{ order_status.order_status_id }}" {% if mbbx.approved_os == order_status.order_status_id %}selected="selected"{% endif %}>{{ order_status.name }}</option>
+                                    {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {# Order Status On Hold Field #}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="payment_mobbex_onhold_os">{{ mbbx.onhold_os_label }}</label>
+                                <div class="col-sm-10">
+                                    <select name="payment_mobbex_onhold_os" id="payment_mobbex_onhold_os" class="form-control">
+                                    {% for order_status in mbbx.all_order_statuses %}
+                                        <option value="{{ order_status.order_status_id }}" {% if mbbx.onhold_os == order_status.order_status_id %}selected="selected"{% endif %}>{{ order_status.name }}</option>
+                                    {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {# Order Status On Fail Field #}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="payment_mobbex_failed_os">{{ mbbx.failed_os_label }}</label>
+                                <div class="col-sm-10">
+                                    <select name="payment_mobbex_failed_os" id="payment_mobbex_failed_os" class="form-control">
+                                    {% for order_status in mbbx.all_order_statuses %}
+                                        <option value="{{ order_status.order_status_id }}" {% if mbbx.failed_os == order_status.order_status_id %}selected="selected"{% endif %}>{{ order_status.name }}</option>
+                                    {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {# Order Status On Reject Field #}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label" for="payment_mobbex_rejected_os">{{ mbbx.rejected_os_label }}</label>
+                                <div class="col-sm-10">
+                                    <select name="payment_mobbex_rejected_os" id="payment_mobbex_rejected_os" class="form-control">
+                                    {% for order_status in mbbx.all_order_statuses %}
+                                        <option value="{{ order_status.order_status_id }}" {% if mbbx.rejected_os == order_status.order_status_id %}selected="selected"{% endif %}>{{ order_status.name }}</option>
+                                    {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>
