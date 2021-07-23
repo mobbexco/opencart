@@ -103,4 +103,24 @@ class MobbexHelper
 
         return md5($apiKey . '|' . $accessToken);
     }
+
+    /**
+     * Get payment state from Mobbex status code.
+     * 
+     * @param int|string $status
+     * 
+     * @return string "approved" | "onhold" | "rejected" | "failed"
+     */
+    public function getState($status)
+    {
+        if ($status == 2 || $status == 3 || $status == 100 || $status == 201) {
+            return 'onhold';
+        } else if ($status == 4 || $status >= 200 && $status < 400) {
+            return 'approved';
+        } else if ($status == 604) {
+            return 'rejected';
+        } else {
+            return 'failed';
+        }
+	}
 }

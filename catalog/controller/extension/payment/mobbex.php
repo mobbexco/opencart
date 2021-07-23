@@ -61,6 +61,46 @@ class ControllerExtensionPaymentMobbex extends Controller
         }
     }
 
+    public function webhook()
+    {
+        // load models and instance helper
+        $this->load->model('checkout/order');
+        $this->load->language('extension/payment/mobbex');
+        $this->helper = new MobbexHelper($this->config);
+
+        // Get and validate received data
+        $id    = $this->request->get['order_id'];
+        $token = $this->request->get['mobbex_token'];
+        $data  = $this->request->post['data'];
+
+        if (empty($id) || empty($token) || empty($data))
+            die("WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
+
+        if ($token != $this->helper->generateToken())
+            die("WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
+
+        if ($this->request->post['type'] != 'checkout')
+            die("WebHook Error: This endpoint can only receive checkout type calls. v{$this->helper::$version}");
+
+        // Get new order status
+        $status      = $data['payment']['status']['code'];
+        $state       = $this->helper->getState($status);
+        $orderStatus = 0;
+
+        if ($state == 'onhold') {
+            $orderStatus = 1;
+        } else if ($state == 'approved') {
+            $orderStatus = 2;
+        } else if ($state == 'failed') {
+            $orderStatus = 10;
+        } else if ($state == 'rejected') {
+            $orderStatus = 8;
+        }
+
+        // Update order status
+        $this->model_checkout_order->addOrderHistory($id, $orderStatus, $this->createOrderComment($data), $state == 'approved');
+    }
+
     /**
      * Get Mobbex checkout.
      * 
@@ -78,7 +118,7 @@ class ControllerExtensionPaymentMobbex extends Controller
             'uri'    => 'checkout',
             'method' => 'POST',
             'body'   => [
-                'total'       => $order["total"],
+                'total'       => $order['total'],
                 'currency'    => $order['currency_code'],
                 'webhook'     => $this->getOrderEndpointUrl($order, 'webhook'),
                 'return_url'  => $this->getOrderEndpointUrl($order, 'callback'),
@@ -89,8 +129,7 @@ class ControllerExtensionPaymentMobbex extends Controller
                 'test'        => $this->config->get('payment_mobbex_test_mode'),
                 'timeout'     => 5,
                 'options'     => [
-                    'button'   => false,
-                    'domain'   => HTTP_SERVER,
+                    'domain'   => HTTPS_SERVER,
                     'redirect' => [
                         'success' => true,
                         'failure' => false,
@@ -119,7 +158,7 @@ class ControllerExtensionPaymentMobbex extends Controller
 
         foreach ($this->cart->getProducts() as $product) {
             $items[] = [
-                'image'       => HTTP_SERVER . 'image/' . $product['image'],
+                'image'       => HTTPS_SERVER . 'image/' . $product['image'],
                 'quantity'    => $product['quantity'],
                 'description' => $product['name'],
                 'total'       => round($product['price'] * $order['currency_value'], 2),
@@ -139,7 +178,7 @@ class ControllerExtensionPaymentMobbex extends Controller
     private function getCustomer($order)
     {
         return [
-            'name'  => $order['payment_firstname'] . $order['payment_lastname'],
+            'name'  => $order['payment_firstname'] . ' ' . $order['payment_lastname'],
             'email' => $order['email'],
             'phone' => $order['telephone'],
             'uid'   => $this->customer->getId(),
@@ -164,5 +203,40 @@ class ControllerExtensionPaymentMobbex extends Controller
         ];
 
         return $this->url->link("extension/payment/mobbex/$endpoint", '', true) . '&' . http_build_query($args);
+    }
+
+    /**
+     * Create order comment from Mobbex webhook post data.
+     * 
+     * @param array $data
+     * 
+     * @return string
+     */
+    private function createOrderComment($data)
+    {
+        // Get data from post
+        $date          = date('d/m/Y h:i');
+        $paymentId     = $data['payment']['id'];
+        $paymentTotal  = $data['payment']['total'];
+        $paymentMethod = $data['payment']['source']['name'];
+        $installments  = '';
+        $riskAnalysis  = isset($data['payment']['riskAnalysis']['level']) ? $data['payment']['riskAnalysis']['level'] : '';
+        $entityUid     = isset($data['entity']['uid']) ? $data['entity']['uid'] : '';
+
+        // Get installments info
+        if ($data['payment']['source']['type'] == 'card') {
+            $installmentDesc  = $data['payment']['source']['installment']['description'];
+            $installmentQty   = $data['payment']['source']['installment']['count'];
+            $installmentTotal = $data['payment']['source']['installment']['amount'];
+
+            $installments = "en $installmentDesc. $installmentQty Cuota/s de $installmentTotal";
+        }
+
+        // Merge and return
+        return str_replace(
+            ['{date}', '{paymentID}', '{paymentTotal}', '{paymentMethod}', '{installments}', '{riskAnalysis}', '{entityUID}'],
+            [$date, $paymentId, $paymentTotal, $paymentMethod, $installments, $riskAnalysis, $entityUid], 
+            $this->language->get('order_comment')
+        );
     }
 }
