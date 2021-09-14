@@ -89,15 +89,17 @@ class ControllerExtensionPaymentMobbex extends Controller
             ],
 
             // Mobbex config fields
-            'payment_mobbex_status'       => $this->getFormConfig('status'),
-            'payment_mobbex_test_mode'    => $this->getFormConfig('test_mode'),
-            'payment_mobbex_api_key'      => $this->getFormConfig('api_key'),
-            'payment_mobbex_access_token' => $this->getFormConfig('access_token'),
+            'payment_mobbex_status'         => $this->getFormConfig('status'),
+            'payment_mobbex_test_mode'      => $this->getFormConfig('test_mode'),
+            'payment_mobbex_api_key'        => $this->getFormConfig('api_key'),
+            'payment_mobbex_access_token'   => $this->getFormConfig('access_token'),
+            'payment_mobbex_redirect_mode'  => $this->getFormConfig('redirect_mode'),
 
-            'status_label'                => $this->language->get('status'),
-            'test_mode_label'             => $this->language->get('test_mode'),
-            'api_key_label'               => $this->language->get('api_key'),
-            'access_token_label'          => $this->language->get('access_token'),
+            'status_label'                  => $this->language->get('status'),
+            'test_mode_label'               => $this->language->get('test_mode'),
+            'api_key_label'                 => $this->language->get('api_key'),
+            'access_token_label'            => $this->language->get('access_token'),
+            'redirect_mode'                 => $this->language->get('redirect_mode'),
 
             // Plugin extra data
             'plugin_version'              => $this->helper::$version,

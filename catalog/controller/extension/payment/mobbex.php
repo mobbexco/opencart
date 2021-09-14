@@ -19,14 +19,18 @@ class ControllerExtensionPaymentMobbex extends Controller
         $order   = $this->model_checkout_order->getOrder($orderId);
 
         // Create Mobbex checkout
-        $checkout = $this->getCheckout($order);
-        $mbbxUrl  = isset($checkout['url']) ? $checkout['url'] : '';
+        $checkout   = $this->getCheckout($order);
+        
+        $mbbxUrl    = isset($checkout['url']) ? $checkout['url'] : '';
+        $redirect   = boolval($this->config->get('payment_mobbex_embed_mode'));
+        $checkoutId = isset($checkout['id']) ? $checkout['id'] : '';
+        $rtrnUrl    = $this->getOrderEndpointUrl($order, 'callback');
 
         // Get page text translations
         $textTitle = $this->language->get('text_title');
 
         // Return view
-        return $this->load->view('extension/payment/mobbex', compact('mbbxUrl', 'textTitle'));
+        return $this->load->view('extension/payment/mobbex', compact('mbbxUrl', 'textTitle', 'embed', 'checkoutId', 'rtrnUrl'));
     }
 
     public function callback()
@@ -138,6 +142,7 @@ class ControllerExtensionPaymentMobbex extends Controller
                         'name'    => 'opencart',
                         'version' => $this->helper::$version,
                     ],
+                    'embed'    => boolval($this->config->get('payment_mobbex_embed_mode')),
                 ],
             ]
         ];
@@ -235,7 +240,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         // Merge and return
         return str_replace(
             ['{date}', '{paymentID}', '{paymentTotal}', '{paymentMethod}', '{installments}', '{riskAnalysis}', '{entityUID}'],
-            [$date, $paymentId, $paymentTotal, $paymentMethod, $installments, $riskAnalysis, $entityUid], 
+            [$date, $paymentId, $paymentTotal, $paymentMethod, $installments, $riskAnalysis, $entityUid],
             $this->language->get('order_comment')
         );
     }

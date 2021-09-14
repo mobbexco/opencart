@@ -46,9 +46,9 @@
 
                     {# Test Mode Field #}
                     <div class="form-group required">
-                        <label class="col-sm-2 control-label" for="input-status">{{ test_mode_label }}</label>
+                        <label class="col-sm-2 control-label" for="input-test-mode">{{ test_mode_label }}</label>
                         <div class="col-sm-10">
-                            <select name="payment_mobbex_test_mode" id="input-status" class="form-control">
+                            <select name="payment_mobbex_test_mode" id="input-test-mode" class="form-control">
                             {% if payment_mobbex_test_mode %}
                                 <option value="1" selected="selected">{{ text_enabled }}</option>
                                 <option value="0">{{ text_disabled }}</option>
@@ -73,6 +73,22 @@
                         <label class="col-sm-2 control-label" for="payment_mobbex_access_token">{{ access_token_label }}</label>
                         <div class="col-sm-10">
                             <input type="text" class="form-control" id="payment_mobbex_access_token" name="payment_mobbex_access_token" value="{{ payment_mobbex_access_token }}" />
+                        </div>
+                    </div>
+
+                    {# Embed Mode Field #}
+                    <div class="form-group required">
+                        <label class="col-sm-2 control-label" for="input-redirect-mode">{{ redirect_mode }}</label>
+                        <div class="col-sm-10">
+                            <select name="payment_mobbex_redirect_mode" id="input-redirect-mode" class="form-control">
+                            {% if payment_mobbex_redirect_mode %}
+                                <option value="1" selected="selected">{{ text_enabled }}</option>
+                                <option value="0">{{ text_disabled }}</option>
+                            {% else %}
+                                <option value="1">{{ text_enabled }}</option>
+                                <option value="0" selected="selected">{{ text_disabled }}</option>
+                            {% endif %}
+                            </select>
                         </div>
                     </div>
                 </form>

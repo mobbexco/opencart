@@ -1,1 +1,5 @@
-<a href="{{ mbbxUrl }}" name="mobbex-checkout" class="btn btn-primary pull-right">{{ textTitle }}</a>
+<a href="{{ mbbxUrl }}" id='mbbxCheckoutBtn' name="mobbex-checkout" class="btn btn-primary pull-right" checkoutId="{{checkoutId}}" returnUrl="{{rtrnUrl}}" {{ (redirect) ? '' : 'onclick="getCheckout(event)"' }} >{{ textTitle }}</a>
+<div id="mbbx-container"></div>
+
+<script src="https://res.mobbex.com/js/embed/mobbex.embed@1.0.20.js" integrity="sha384-FB3E0FC63B8D8146A0B408AF09C6253B377C579D978218FCD0B1798B21B609B7C67BEF66E85B23F79446EEF2A26AF815" crossorigin="anonymous"></script>
+<script src='catalog/view/javascript/mobbex/mobbex_checkout.js'>

@@ -15,4 +15,5 @@ $_ = [
     'api_key'          => 'Clave de API',
     'access_token'     => 'Token de Acceso',
     'test_mode'        => 'Modo de Pruebas',
+    'redirect_mode'    => 'Modo Redirección',
 ];
