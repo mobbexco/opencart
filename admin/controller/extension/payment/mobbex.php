@@ -36,8 +36,8 @@ class ControllerExtensionPaymentMobbex extends Controller
         $this->db->query(
             "CREATE TABLE IF NOT EXISTS `" . DB_PREFIX  . "mobbex_transaction` (
                 `cart_id` INT(11) NOT NULL,
-				`data` TEXT NOT NULL,
-				PRIMARY KEY (`cart_id`));"
+                `data` TEXT NOT NULL,
+                PRIMARY KEY (`cart_id`));"
         );
   
         $this->db->query(
