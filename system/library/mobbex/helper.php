@@ -74,6 +74,7 @@ class MobbexHelper
             'content-type: application/json',
             'x-api-key: ' . $this->config->get('payment_mobbex_api_key'),
             'x-access-token: ' . $this->config->get('payment_mobbex_access_token'),
+            'x-ecommerce-agent: OpenCart/' . VERSION . ' Plugin/' . $this::$version,
         ];
     }
 

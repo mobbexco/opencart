@@ -135,8 +135,9 @@ class ControllerExtensionPaymentMobbex extends Controller
                         'failure' => false,
                     ],
                     'platform' => [
-                        'name'    => 'opencart',
-                        'version' => $this->helper::$version,
+                        'name'             => 'opencart',
+                        'version'          => $this->helper::$version,
+                        'platform_version' => VERSION,
                     ],
                 ],
             ]
