@@ -71,7 +71,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         // Get and validate received data
         $id    = $this->request->get['order_id'];
         $token = $this->request->get['mobbex_token'];
-        $data  = isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json' ? json_decode(file_get_contents('php://input'), true) : $this->request->post['data'];
+        $data  = isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json' ? json_decode(file_get_contents('php://input'), true)['data'] : $this->request->post['data'];
 
         if (empty($id) || empty($token) || empty($data))
             die("WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
