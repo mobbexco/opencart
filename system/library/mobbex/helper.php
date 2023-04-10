@@ -3,7 +3,7 @@
 class MobbexHelper
 {
     /** @var string */
-    public static $version = '1.0.0';
+    public static $version = '1.0.23';
 
     /** Mobbex API base URL */
     public static $apiUrl = 'https://api.mobbex.com/p/';
