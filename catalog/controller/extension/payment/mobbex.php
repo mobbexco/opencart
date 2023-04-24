@@ -48,7 +48,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         }
 
         // If the token is invalid, redirect to checkout with error
-        if ($token != $this->helper->generateToken()) {
+        if (!$this->helper->validateToken($token)) {
             // Redirect to checkout with error
             $this->session->data['error'] = $this->language->get('token_error');
             $this->response->redirect($this->url->link('checkout/checkout'));
@@ -76,7 +76,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         if (empty($id) || empty($token) || empty($data))
             die("WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
 
-        if ($token != $this->helper->generateToken())
+        if (!$this->helper->validateToken($token))
             die("WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
 
         if ($this->request->post['type'] != 'checkout')
