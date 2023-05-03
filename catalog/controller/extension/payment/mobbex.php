@@ -68,22 +68,25 @@ class ControllerExtensionPaymentMobbex extends Controller
         $this->load->language('extension/payment/mobbex');
         $this->helper = new MobbexHelper($this->config);
 
-        // Get and validate received data
-        $id    = $this->request->get['order_id'];
-        $token = $this->request->get['mobbex_token'];
-        $data  = isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json' ? json_decode(file_get_contents('php://input'), true)['data'] : $this->request->post['data'];
+        // Get and validate received data from query params
+        $id        = $this->request->get['order_id'];
+        $cartId    = $this->request->get['cart_id'];
+        $token     = $this->request->get['mobbex_token'];
+        $postData  = isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json' ? json_decode(file_get_contents('php://input'), true)['data'] : $this->request->post['data'];
+        // Format data so that it is clean for saving in database
+        $data      = $this->helper->formatWebhookData($postData, $id);
 
-        if (empty($id) || empty($token) || empty($data))
-            die("WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
+        if (empty($id) || empty($cartId) || empty($token) || empty($postData))
+            die("WebHook Error: Empty ID, Cart Id, token or post body. v{$this->helper::$version}");
 
         if ($token != $this->helper->generateToken())
             die("WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
 
-        if ($this->request->post['type'] != 'checkout')
+        if (empty($postData['checkout']))
             die("WebHook Error: This endpoint can only receive checkout type calls. v{$this->helper::$version}");
 
         // Get new order status
-        $status      = $data['payment']['status']['code'];
+        $status      = $postData['payment']['status']['code'];
         $state       = $this->helper->getState($status);
         $orderStatus = 0;
 
@@ -98,7 +101,9 @@ class ControllerExtensionPaymentMobbex extends Controller
         }
 
         // Update order status
-        $this->model_checkout_order->addOrderHistory($id, $orderStatus, $this->createOrderComment($data), $state == 'approved');
+        $this->model_checkout_order->addOrderHistory($id, $orderStatus, $this->createOrderComment($postData), $state == 'approved');
+        // Save formated data in mobbex transaction table
+        $this->helper->saveTransaction($this->db, $cartId, $data);
     }
 
     /**
@@ -170,6 +175,21 @@ class ControllerExtensionPaymentMobbex extends Controller
     }
 
     /**
+     * Get cart_id from product
+     * 
+     * @return string $cartId
+     */
+
+    private function getCartId()
+    {
+        // Search cart_id in products
+        foreach ($this->cart->getProducts() as $product)
+            $cartId = $product['cart_id'];
+        
+        return $cartId;
+    }
+
+    /**
      * Get order customer data.
      * 
      * @param array $order
@@ -196,11 +216,13 @@ class ControllerExtensionPaymentMobbex extends Controller
      */
     private function getOrderEndpointUrl($order, $endpoint)
     {
+        // Crates an array with necesary query params
         $args = [
             'mobbex_token' => $this->helper->generateToken(),
             'platform'     => 'opencart',
             'version'      => $this->helper::$version,
-            'order_id'     => $order['order_id']
+            'order_id'     => $order['order_id'],
+            'cart_id'      => $this->getCartId(),
         ];
 
         return $this->url->link("extension/payment/mobbex/$endpoint", '', true) . '&' . http_build_query($args);
