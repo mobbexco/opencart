@@ -7,6 +7,7 @@ $_ = [
     'text_mobbex'      => '<a href="https://mobbex.com" target="_blank"><img src="view/image/mobbex.png" alt="Mobbex" title="Mobbex" width="100px"/></a>',
     'success_save'     => 'Success: You have modified Mobbex details!',
     'error_permission' => 'Warning: You do not have permission to modify this config!',
+    'mbbx_currency'    => 'Caution: remember to verify that the configured currency supported by Mobbex (ARS)',
 
     'text_enabled'     => 'Enabled',
     'text_disabled'    => 'Disabled',

@@ -23,6 +23,9 @@
         {% endif %}
     
         <div class="panel panel-default">
+            {% if ars_currency == false %}
+                <div class="alert alert-danger">{{ mbbx_currency }}</div>
+            {% endif %}
             <div class="panel-heading">
                 <h3 class="panel-title"><i class="fa fa-pencil"></i>Edit Mobbex</h3>
             </div>
