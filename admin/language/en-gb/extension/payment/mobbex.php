@@ -15,4 +15,5 @@ $_ = [
     'api_key'          => 'API Key',
     'access_token'     => 'Access Token',
     'test_mode'        => 'Test Mode',
+    'debug_mode'       => 'Debug Mode',
 ];

@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/logger.php';
+
 class MobbexHelper
 {
     /** @var string */
@@ -13,6 +15,7 @@ class MobbexHelper
 
     public function __construct($config) {
         $this->config = $config;
+        $this->logger = new MobbexLogger($config);
     }
 
     /**
@@ -33,6 +36,8 @@ class MobbexHelper
         if (!empty($data['params']))
             $data['uri'] = $data['uri'] . '?' . http_build_query($data['params']);
 
+        $this->logger->log('debug', "helper > request | Request Creation", ['request_body' => $data['body']]);
+
         curl_setopt_array($curl, [
             CURLOPT_URL            => self::$apiUrl . $data['uri'],
             CURLOPT_HTTPHEADER     => $this->getHeaders(),
@@ -51,7 +56,7 @@ class MobbexHelper
         curl_close($curl);
 
         if ($error) {
-            error_log('Curl error in Mobbex request #:' . $error);
+            $this->logger->log('error', "helper > request | Curl error in Mobbex request #: $error", ['request_body' => $data['body']]);
         } else {
             $result = json_decode($response, true);
 

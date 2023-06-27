@@ -1,6 +1,7 @@
 <?php
 
 require_once DIR_SYSTEM . 'library/mobbex/helper.php';
+require_once __DIR__ . '/../../../../system/library/mobbex/logger.php';
 
 class ControllerExtensionPaymentMobbex extends Controller
 {
@@ -13,6 +14,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         $this->load->model('checkout/order');
         $this->load->language('extension/payment/mobbex');
         $this->helper = new MobbexHelper($this->config);
+        $this->logger = new MobbexLogger($this->config);
 
         // Get current order data
         $orderId = $this->session->data['order_id'];
@@ -35,7 +37,8 @@ class ControllerExtensionPaymentMobbex extends Controller
         $this->load->model('checkout/order');
         $this->load->language('extension/payment/mobbex');
         $this->helper = new MobbexHelper($this->config);
-
+        $this->logger = new MobbexLogger($this->config);
+        
         // Get return data
         $id     = $this->request->get['order_id'];
         $status = $this->request->get['status'];
@@ -44,6 +47,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         // If is empty, redirect to checkout with error
         if (empty($id) || empty($status) || empty($token)) {
             $this->session->data['error'] = $this->language->get('callback_error');
+            $this->logger->log('error', "ControllerExtensionPaymentMobbex > callback | ". $this->language->get('callback_error'));
             $this->response->redirect($this->url->link('checkout/checkout'));
         }
 
@@ -51,6 +55,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         if ($token != $this->helper->generateToken()) {
             // Redirect to checkout with error
             $this->session->data['error'] = $this->language->get('token_error');
+            $this->logger->log('error', "ControllerExtensionPaymentMobbex > callback | " . $this->language->get('token_error'));
             $this->response->redirect($this->url->link('checkout/checkout'));
         }
 
@@ -67,20 +72,23 @@ class ControllerExtensionPaymentMobbex extends Controller
         $this->load->model('checkout/order');
         $this->load->language('extension/payment/mobbex');
         $this->helper = new MobbexHelper($this->config);
+        $this->logger = new MobbexLogger($this->config);
 
         // Get and validate received data
         $id    = $this->request->get['order_id'];
         $token = $this->request->get['mobbex_token'];
         $data  = isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json' ? json_decode(file_get_contents('php://input'), true)['data'] : $this->request->post['data'];
 
+        $this->logger->log('debug', "ControllerExtensionPaymentMobbex > webhook | Process Webhook", $data);
+
         if (empty($id) || empty($token) || empty($data))
-            die("WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
+            $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
 
         if ($token != $this->helper->generateToken())
-            die("WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
+            $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
 
         if ($this->request->post['type'] != 'checkout')
-            die("WebHook Error: This endpoint can only receive checkout type calls. v{$this->helper::$version}");
+            $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: This endpoint can only receive checkout type calls. v{$this->helper::$version}}");
 
         // Get new order status
         $status      = $data['payment']['status']['code'];
