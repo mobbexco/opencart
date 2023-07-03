@@ -179,10 +179,11 @@ class ControllerExtensionPaymentMobbex extends Controller
     private function getCustomer($order)
     {
         return [
-            'name'  => $order['payment_firstname'] . ' ' . $order['payment_lastname'],
-            'email' => $order['email'],
-            'phone' => $order['telephone'],
-            'uid'   => $this->customer->getId(),
+            'email'          => $order['email'],
+            'phone'          => $order['telephone'],
+            'uid'            => $this->customer->getId(),
+            'identification' => $this->getDni($order['custom_field']),
+            'name'           => $order['payment_firstname'] . ' ' . $order['payment_lastname'],
         ];
     }
 
@@ -239,5 +240,27 @@ class ControllerExtensionPaymentMobbex extends Controller
             [$date, $paymentId, $paymentTotal, $paymentMethod, $installments, $riskAnalysis, $entityUid], 
             $this->language->get('order_comment')
         );
+    }
+
+    /**
+     * Get customer DNI.
+     * 
+     * @param array  $customFields
+     * 
+     * @return string $value DNI value
+     * 
+     */
+    private function getDni($customFields)
+    {
+        // Get DNI custom field id from table
+        $result = $this->db->query("SELECT `custom_field_id` FROM `oc_custom_field_description` WHERE name = 'DNI'")->row['custom_field_id'];
+
+        if (!$result)
+            return;
+        
+        // Get DNI from order custom fields
+        foreach ($customFields as $key =>$value)
+            if ($key == $result)
+                return $value;
     }
 }

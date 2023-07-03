@@ -155,11 +155,12 @@ class ControllerExtensionPaymentMobbex extends Controller
         // Load model
         $this->load->model('customer/custom_field');
 
+        // Create a query to the database
         $query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "custom_field_description` WHERE name = 'DNI'");
         
-        // Checks if there is a field named DNI, otherwise creates it
+        // Check if an DNI custom field exists, otherwise set and creates it
         if ($query)
-            return;
+            return; 
         else {
             // Customize an array containing the information needed to create the field
             $dniField = [
@@ -185,5 +186,5 @@ class ControllerExtensionPaymentMobbex extends Controller
             // Add dni custom field
             $this->model_customer_custom_field->addCustomField($dniField);
         }
-    }
+    } 
 }
