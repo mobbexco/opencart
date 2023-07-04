@@ -126,17 +126,18 @@ class ControllerExtensionPaymentMobbex extends Controller
             'uri'    => 'checkout',
             'method' => 'POST',
             'body'   => [
-                'total'       => $order['total'],
-                'currency'    => $order['currency_code'],
-                'webhook'     => $this->getOrderEndpointUrl($order, 'webhook'),
-                'return_url'  => $this->getOrderEndpointUrl($order, 'callback'),
+                'total'        => (int) $order['total'],
+                'currency'     => (string) $order['currency_code'],
+                'webhook'      => (string) $this->getOrderEndpointUrl($order, 'webhook'),
+                'return_url'   => (string) $this->getOrderEndpointUrl($order, 'callback'),
                 'reference'   => 'oc_order_' . $order['order_id'] . '_time_' . time(),
-                'description' => 'Orden #' . $order['order_id'],
-                'items'       => $this->getItems($order),
-                'customer'    => $this->getCustomer($order),
-                'test'        => $this->config->get('payment_mobbex_test_mode'),
-                'timeout'     => 5,
-                'options'     => [
+                'description'  => 'Orden #' . $order['order_id'],
+                'items'        => $this->getItems($order),
+                'customer'     => $this->getCustomer($order),
+                'test'         => (bool) $this->config->get('payment_mobbex_test_mode'),
+                'debug'        => (bool) $this->config->get('payment_mobbex_debug_mode'),
+                'timeout'      => 5,
+                'options'      => [
                     'domain'   => HTTPS_SERVER,
                     'redirect' => [
                         'success' => true,
@@ -210,6 +211,9 @@ class ControllerExtensionPaymentMobbex extends Controller
             'version'      => $this->helper::$version,
             'order_id'     => $order['order_id']
         ];
+        //Add Xdebug as query if debug mode is active
+        if ($endpoint === 'webhook' && $this->config->get('payment_mobbex_debug_mode'))
+            $args['XDEBUG_SESSION_START'] = 'PHPSTORM';
 
         return $this->url->link("extension/payment/mobbex/$endpoint", '', true) . '&' . http_build_query($args);
     }
