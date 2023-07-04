@@ -1,2 +1,4 @@
 /.vscode
 mobbex.*.zip
+/system/library/mobbex/vendor
+/system/library/mobbex/composer.lock

@@ -1,18 +1,23 @@
 <?php
 
-require_once DIR_SYSTEM . 'library/mobbex/helper.php';
+require_once DIR_SYSTEM . 'library/mobbex/config.php';
+require_once DIR_SYSTEM . 'library/mobbex/sdk.php';
 
 class ControllerExtensionPaymentMobbex extends Controller
 {
-    /** @var MobbexHelper */
-    public static $helper;
+    /** @var MobbexConfig */
+    public static $mobbexConfig;
 
     public function index()
     {
-        // load models and instance helper
+         // load models and instance helper
         $this->load->model('checkout/order');
         $this->load->language('extension/payment/mobbex');
-        $this->helper = new MobbexHelper($this->config);
+        $this->load->model('setting/setting');
+        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
+
+        //Init sdk classes
+        \MobbexSdk::init($this->mobbexConfig);
 
         // Get current order data
         $orderId = $this->session->data['order_id'];
@@ -20,7 +25,7 @@ class ControllerExtensionPaymentMobbex extends Controller
 
         // Create Mobbex checkout
         $checkout = $this->getCheckout($order);
-        $mbbxUrl  = isset($checkout['url']) ? $checkout['url'] : '';
+        $mbbxUrl  = isset($checkout->url) ? $checkout->url : '';
 
         // Get page text translations
         $textTitle = $this->language->get('text_title');
@@ -34,7 +39,11 @@ class ControllerExtensionPaymentMobbex extends Controller
         // load models and instance helper
         $this->load->model('checkout/order');
         $this->load->language('extension/payment/mobbex');
-        $this->helper = new MobbexHelper($this->config);
+        $this->load->model('setting/setting');
+        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
+
+        //Init sdk classes
+        \MobbexSdk::init($this->mobbexConfig);
 
         // Get return data
         $id     = $this->request->get['order_id'];
@@ -48,7 +57,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         }
 
         // If the token is invalid, redirect to checkout with error
-        if ($token != $this->helper->generateToken()) {
+        if (!\Mobbex\Repository::validateToken($token)) {
             // Redirect to checkout with error
             $this->session->data['error'] = $this->language->get('token_error');
             $this->response->redirect($this->url->link('checkout/checkout'));
@@ -66,25 +75,31 @@ class ControllerExtensionPaymentMobbex extends Controller
         // load models and instance helper
         $this->load->model('checkout/order');
         $this->load->language('extension/payment/mobbex');
-        $this->helper = new MobbexHelper($this->config);
+        $this->load->model('setting/setting');
+        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
+
+        //Init sdk classes
+        \MobbexSdk::init($this->mobbexConfig);
+
+        error_log('llego el webhook: ' . "\n" . json_encode('siii', JSON_PRETTY_PRINT) . "\n", 3, 'log.log');
 
         // Get and validate received data
-        $id    = $this->request->get['order_id'];
-        $token = $this->request->get['mobbex_token'];
-        $data  = isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json' ? json_decode(file_get_contents('php://input'), true)['data'] : $this->request->post['data'];
+        $id            = $this->request->get['order_id'];
+        $token         = $this->request->get['mobbex_token'];
+        $data          = isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json' ? json_decode(file_get_contents('php://input'), true)['data'] : $this->request->post['data'];
+        $mobbexVersion = MobbexConfig::$version;
+
+        error_log('post: ' . "\n" . json_encode($this->request->post, JSON_PRETTY_PRINT) . "\n", 3, 'log.log');
 
         if (empty($id) || empty($token) || empty($data))
-            die("WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
+            die("WebHook Error: Empty ID, token or post body. v{$mobbexVersion}");
 
-        if ($token != $this->helper->generateToken())
-            die("WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
-
-        if ($this->request->post['type'] != 'checkout')
-            die("WebHook Error: This endpoint can only receive checkout type calls. v{$this->helper::$version}");
+        if (!\Mobbex\Repository::validateToken($token))
+            die("WebHook Error: Empty ID, token or post body. v{$mobbexVersion}");
 
         // Get new order status
         $status      = $data['payment']['status']['code'];
-        $state       = $this->helper->getState($status);
+        $state       = $this->getState($status);
         $orderStatus = 0;
 
         if ($state == 'onhold') {
@@ -106,7 +121,7 @@ class ControllerExtensionPaymentMobbex extends Controller
      * 
      * @param mixed $order
      * 
-     * @return array
+     * @return mixed
      */
     private function getCheckout($order)
     {
@@ -114,36 +129,29 @@ class ControllerExtensionPaymentMobbex extends Controller
         if (!in_array($order['currency_code'], ['ARS', 'ARG']))
             return;
 
-        $data = [
-            'uri'    => 'checkout',
-            'method' => 'POST',
-            'body'   => [
-                'total'       => $order['total'],
-                'currency'    => $order['currency_code'],
-                'webhook'     => $this->getOrderEndpointUrl($order, 'webhook'),
-                'return_url'  => $this->getOrderEndpointUrl($order, 'callback'),
-                'reference'   => 'oc_order_' . $order['order_id'] . '_time_' . time(),
-                'description' => 'Orden #' . $order['order_id'],
-                'items'       => $this->getItems($order),
-                'customer'    => $this->getCustomer($order),
-                'test'        => $this->config->get('payment_mobbex_test_mode'),
-                'timeout'     => 5,
-                'options'     => [
-                    'domain'   => HTTPS_SERVER,
-                    'redirect' => [
-                        'success' => true,
-                        'failure' => false,
-                    ],
-                    'platform' => [
-                        'name'             => 'opencart',
-                        'version'          => $this->helper::$version,
-                        'platform_version' => VERSION,
-                    ],
-                ],
-            ]
-        ];
+        $common_plans = $advanced_plans = [];
 
-        return $this->helper->request($data);
+        try {
+
+            $mobbexCheckout = new \Mobbex\Modules\Checkout(
+                $this->session->data['order_id'],
+                $order['total'],
+                $this->getOrderEndpointUrl($order, 'callback'),
+                $this->getOrderEndpointUrl($order, 'webhook'),
+                $this->getItems($order),
+                \Mobbex\Repository::getInstallments($this->cart->getProducts(), $common_plans, $advanced_plans),
+                $this->getCustomer($order),
+                $this->getAddresses($order),
+                'all',
+                'mobbexCheckoutRequest'
+            );
+
+        } catch (\Mobbex\Exception $e) {
+            $this->logger->log('debug', "Helper Mobbex > getCheckoutFromQuote | Checkout Response: ", $mobbexCheckout->response);
+            return false;
+        }
+
+        return $mobbexCheckout;
     }
 
     /**
@@ -197,13 +205,40 @@ class ControllerExtensionPaymentMobbex extends Controller
     private function getOrderEndpointUrl($order, $endpoint)
     {
         $args = [
-            'mobbex_token' => $this->helper->generateToken(),
+            'mobbex_token' => \Mobbex\Repository::generateToken(),
             'platform'     => 'opencart',
-            'version'      => $this->helper::$version,
+            'version'      => MobbexConfig::$version,
             'order_id'     => $order['order_id']
         ];
 
         return $this->url->link("extension/payment/mobbex/$endpoint", '', true) . '&' . http_build_query($args);
+    }
+
+    /**
+     * Get Addresses data for Mobbex Checkout.
+     * 
+     * @param mixed $order
+     * 
+     * @return array $addresses
+     */
+    public function getAddresses($order)
+    {
+        $addresses = [];
+
+        foreach (['payment' => 'billing', 'shipping' => 'shipping'] as $key => $type) {
+            $street = isset($order[$key.'_address_1']) ? $order[$key.'_address_1'] : '';
+            $addresses[] = [
+                'type'         => $type,
+                'country'      => isset($order[$key.'_iso_code_3']) ? $order[$key.'_iso_code_3'] : '',
+                'street'       => trim(preg_replace('/(\D{0})+(\d*)+$/', '', trim($street))),
+                'streetNumber' => str_replace(preg_replace('/(\D{0})+(\d*)+$/', '', trim($street)), '', trim($street)),
+                'streetNotes'  => '',
+                'zipCode'      => isset($order[$key.'_postcode']) ? $order[$key.'_postcode'] : '',
+                'city'         => isset($order[$key.'_city']) ? $order[$key.'_city'] : '',
+                'state'        => isset($order[$key.'_zone_code']) ? $this->getStateCode($order[$key.'_zone']) : '',
+            ];
+        }
+        return $addresses;
     }
 
     /**
@@ -239,5 +274,63 @@ class ControllerExtensionPaymentMobbex extends Controller
             [$date, $paymentId, $paymentTotal, $paymentMethod, $installments, $riskAnalysis, $entityUid], 
             $this->language->get('order_comment')
         );
+    }
+
+    /**
+     * Return the code for a given state.
+     * 
+     * @param string $state State name.
+     * 
+     * @return string
+     */
+    public function getStateCode($state)
+    {
+        $states = [
+            "Distrito Federal" => 'C',
+            "Bueno Aires"      => 'B',
+            "Catamarca"        => 'K',
+            "Chaco"            => 'H',
+            "Chubut"           => 'U',
+            "Córdoba"          => 'X',
+            "Entre Rios"       => 'E',
+            "Formosa"          => 'P',
+            "Jujuy"            => 'Y',
+            "La Pampa"         => 'L',
+            "La Rioja"         => 'F',
+            "Mendoza"          => 'M',
+            "Misiones"         => 'N',
+            "Neuquén"          => 'Q',
+            "Río Negro"        => 'R',
+            "Salta"            => 'A',
+            "San Juan"         => 'J',
+            "San Luis"         => 'D',
+            "Santa Cruz"       => 'Z',
+            "Sante Fe"         => 'S',
+            "Sante del Estero" => 'G',
+            "Tierra del fuego" => 'V',
+            "Tucumán"          => 'T',
+        ];
+
+        return isset($states[$state]) ? $states[$state] : '';
+    }
+
+    /**
+     * Get payment state from Mobbex status code.
+     * 
+     * @param int|string $status
+     * 
+     * @return string "approved" | "onhold" | "rejected" | "failed"
+     */
+    public function getState($status)
+    {
+        if ($status == 2 || $status == 3 || $status == 100 || $status == 201) {
+            return 'onhold';
+        } else if ($status == 4 || $status >= 200 && $status < 400) {
+            return 'approved';
+        } else if ($status == 604) {
+            return 'rejected';
+        } else {
+            return 'failed';
+        }
     }
 }
