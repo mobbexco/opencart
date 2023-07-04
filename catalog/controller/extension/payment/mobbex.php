@@ -2,6 +2,7 @@
 
 require_once DIR_SYSTEM . 'library/mobbex/config.php';
 require_once DIR_SYSTEM . 'library/mobbex/sdk.php';
+require_once DIR_SYSTEM . 'library/mobbex/logger.php';
 
 class ControllerExtensionPaymentMobbex extends Controller
 {
@@ -15,6 +16,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         $this->load->language('extension/payment/mobbex');
         $this->load->model('setting/setting');
         $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
+        $this->logger = new MobbexLogger($this->mobbexConfig);
 
         //Init sdk classes
         \MobbexSdk::init($this->mobbexConfig);
@@ -41,10 +43,12 @@ class ControllerExtensionPaymentMobbex extends Controller
         $this->load->language('extension/payment/mobbex');
         $this->load->model('setting/setting');
         $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
+        $this->logger = new MobbexLogger($this->mobbexConfig);
 
         //Init sdk classes
         \MobbexSdk::init($this->mobbexConfig);
 
+        
         // Get return data
         $id     = $this->request->get['order_id'];
         $status = $this->request->get['status'];
@@ -53,6 +57,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         // If is empty, redirect to checkout with error
         if (empty($id) || empty($status) || empty($token)) {
             $this->session->data['error'] = $this->language->get('callback_error');
+            $this->logger->log('error', "ControllerExtensionPaymentMobbex > callback | ". $this->language->get('callback_error'));
             $this->response->redirect($this->url->link('checkout/checkout'));
         }
 
@@ -60,6 +65,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         if (!\Mobbex\Repository::validateToken($token)) {
             // Redirect to checkout with error
             $this->session->data['error'] = $this->language->get('token_error');
+            $this->logger->log('error', "ControllerExtensionPaymentMobbex > callback | " . $this->language->get('token_error'));
             $this->response->redirect($this->url->link('checkout/checkout'));
         }
 
@@ -77,11 +83,11 @@ class ControllerExtensionPaymentMobbex extends Controller
         $this->load->language('extension/payment/mobbex');
         $this->load->model('setting/setting');
         $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
+        $this->logger = new MobbexLogger($this->mobbexConfig);
 
         //Init sdk classes
         \MobbexSdk::init($this->mobbexConfig);
-
-        error_log('llego el webhook: ' . "\n" . json_encode('siii', JSON_PRETTY_PRINT) . "\n", 3, 'log.log');
+        
 
         // Get and validate received data
         $id            = $this->request->get['order_id'];
@@ -91,11 +97,17 @@ class ControllerExtensionPaymentMobbex extends Controller
 
         error_log('post: ' . "\n" . json_encode($this->request->post, JSON_PRETTY_PRINT) . "\n", 3, 'log.log');
 
+        $this->logger->log('debug', "ControllerExtensionPaymentMobbex > webhook | Process Webhook", $data);
+
         if (empty($id) || empty($token) || empty($data))
             die("WebHook Error: Empty ID, token or post body. v{$mobbexVersion}");
 
         if (!\Mobbex\Repository::validateToken($token))
             die("WebHook Error: Empty ID, token or post body. v{$mobbexVersion}");
+            $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
+
+        if ($token != $this->helper->generateToken())
+            $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
 
         // Get new order status
         $status      = $data['payment']['status']['code'];
@@ -210,6 +222,9 @@ class ControllerExtensionPaymentMobbex extends Controller
             'version'      => MobbexConfig::$version,
             'order_id'     => $order['order_id']
         ];
+        //Add Xdebug as query if debug mode is active
+        if ($endpoint === 'webhook' && $this->config->get('payment_mobbex_debug_mode'))
+            $args['XDEBUG_SESSION_START'] = 'PHPSTORM';
 
         return $this->url->link("extension/payment/mobbex/$endpoint", '', true) . '&' . http_build_query($args);
     }

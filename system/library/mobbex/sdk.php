@@ -1,7 +1,6 @@
 <?php
 
-// require_once __DIR__ . '/logger.php';
-require_once __DIR__ . '/helper.php';
+require_once __DIR__ . '/logger.php';
 
 class MobbexSdk
 {
@@ -23,7 +22,7 @@ class MobbexSdk
             ], 
             $config->settings, 
             null,
-            null
+            [new MobbexLogger($config), 'log']
         );
 
         // Init api conector
