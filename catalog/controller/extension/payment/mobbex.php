@@ -1,7 +1,7 @@
 <?php
 
 require_once DIR_SYSTEM . 'library/mobbex/helper.php';
-require_once __DIR__ . '/../../../../system/library/mobbex/logger.php';
+require_once DIR_SYSTEM . 'library/mobbex/logger.php';
 
 class ControllerExtensionPaymentMobbex extends Controller
 {
