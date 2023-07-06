@@ -28,12 +28,13 @@
             </div>
             <div class="panel-body">
                 <form action="{{ action }}" method="post" enctype="multipart/form-data" id="mobbex_conf" class="form-horizontal">
+
                     {# Payment Method Status Field #}
                     <div class="form-group required">
                         <label class="col-sm-2 control-label" for="input-status">{{ status_label }}</label>
                         <div class="col-sm-10">
-                            <select name="payment_mobbex_status" id="input-status" class="form-control">
-                            {% if payment_mobbex_status %}
+                            <select name="module_mobbex_finance_widget_status_widget" id="input-status" class="form-control">
+                            {% if module_mobbex_finance_widget_status_widget %}
                                 <option value="1" selected="selected">{{ text_enabled }}</option>
                                 <option value="0">{{ text_disabled }}</option>
                             {% else %}
@@ -44,12 +45,12 @@
                         </div>
                     </div>
 
-                    {# Test Mode Field #}
+                    {# Active on Product #}
                     <div class="form-group required">
-                        <label class="col-sm-2 control-label" for="input-status">{{ test_mode_label }}</label>
+                        <label class="col-sm-2 control-label" for="input-status">{{ active_product_label }}</label>
                         <div class="col-sm-10">
-                            <select name="payment_mobbex_test" id="input-status" class="form-control">
-                            {% if payment_mobbex_test %}
+                            <select name="module_mobbex_finance_widget_active_product" id="input-status" class="form-control">
+                            {% if module_mobbex_finance_widget_active_product %}
                                 <option value="1" selected="selected">{{ text_enabled }}</option>
                                 <option value="0">{{ text_disabled }}</option>
                             {% else %}
@@ -60,12 +61,12 @@
                         </div>
                     </div>
 
-                    {# Debug Mode Field #}
+                    {# Active on Cart #}
                     <div class="form-group required">
-                        <label class="col-sm-2 control-label" for="input-status">{{ debug_mode_label }}</label>
+                        <label class="col-sm-2 control-label" for="input-status">{{ active_cart_label }}</label>
                         <div class="col-sm-10">
-                            <select name="payment_mobbex_debug_mode" id="input-status" class="form-control">
-                            {% if payment_mobbex_debug_mode %}
+                            <select name="module_mobbex_finance_widget_active_cart" id="input-status" class="form-control">
+                            {% if module_mobbex_finance_widget_active_on_cart %}
                                 <option value="1" selected="selected">{{ text_enabled }}</option>
                                 <option value="0">{{ text_disabled }}</option>
                             {% else %}
@@ -76,21 +77,31 @@
                         </div>
                     </div>
 
-                    {# API Key Field #}
+                    {# Button Text #}
                     <div class="form-group required">
-                        <label class="col-sm-2 control-label" for="payment_mobbex_api_key">{{ api_key_label }}</label>
+                        <label class="col-sm-2 control-label" for="module_mobbex_finance_widget_button_text">{{ button_text_label }}</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" id="payment_mobbex_api_key" name="payment_mobbex_api_key" value="{{ payment_mobbex_api_key }}" />
+                            <input type="text" class="form-control" id="module_mobbex_finance_widget_button_text" name="module_mobbex_finance_widget_button_text" value="{{ module_mobbex_finance_widget_button_text }}" />
                         </div>
                     </div>
 
-                    {# Acess Token Field #}
+                    {# Button Logo #}
                     <div class="form-group required">
-                        <label class="col-sm-2 control-label" for="payment_mobbex_access_token">{{ access_token_label }}</label>
+                        <label class="col-sm-2 control-label" for="module_mobbex_finance_widget_button_logo">{{ button_logo_label }}</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" id="payment_mobbex_access_token" name="payment_mobbex_access_token" value="{{ payment_mobbex_access_token }}" />
+                            <input type="text" class="form-control" id="module_mobbex_finance_widget_button_logo" name="module_mobbex_finance_widget_button_logo" value="{{ module_mobbex_finance_widget_button_logo }}"/>
+                            <p><em>default: https://res.mobbex.com/images/sources/mobbex.png</em></p>
                         </div>
                     </div>
+
+                    {# Button styles #}
+                    <div class="form-group required">
+                        <label class="col-sm-2 control-label" for="module_mobbex_finance_widget_button_styles">{{ button_styles_label }}</label>
+                        <div class="col-sm-10">
+                            <textarea class="form-control" id="module_mobbex_finance_widget_button_styles" name="module_mobbex_finance_widget_button_styles">{{module_mobbex_finance_widget_button_styles}}</textarea>
+                        </div>
+                    </div>
+
                 </form>
                 {# Show plugin version #}
                 <div class="w-100 text-right" style="">v{{ plugin_version }}</div>

@@ -17,7 +17,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         // load models and instance helper
         $this->load->model('setting/setting');
         $this->load->language('extension/payment/mobbex');
-        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
+        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting);
 
         //Init sdk classes
         \MobbexSdk::init($this->mobbexConfig);
