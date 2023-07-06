@@ -223,7 +223,7 @@ class ControllerExtensionPaymentMobbex extends Controller
             'order_id'     => $order['order_id']
         ];
         //Add Xdebug as query if debug mode is active
-        if ($endpoint === 'webhook' && $this->config->get('payment_mobbex_debug_mode'))
+        if ($endpoint === 'webhook' && $this->mobbexConfig->debug_mode)
             $args['XDEBUG_SESSION_START'] = 'PHPSTORM';
 
         return $this->url->link("extension/payment/mobbex/$endpoint", '', true) . '&' . http_build_query($args);
