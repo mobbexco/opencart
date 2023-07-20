@@ -147,7 +147,7 @@ class ControllerExtensionPaymentMobbex extends Controller
 
             $mobbexCheckout = new \Mobbex\Modules\Checkout(
                 $this->session->data['order_id'],
-                $order['total'],
+                round($order['total'] * $order['currency_value'], 2),
                 $this->getOrderEndpointUrl($order, 'callback'),
                 $this->getOrderEndpointUrl($order, 'webhook'),
                 $this->getItems($order),
