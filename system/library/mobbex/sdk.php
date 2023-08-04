@@ -9,8 +9,9 @@ class MobbexSdk
      * Allow to use Mobbex php plugins sdk classes.
      * 
      * @param MobbexConfig $config Mobbex Config Class
+     * @param ModelExtensionMobbexDb $db Mobbex Db Class
      */
-    public static function init($config)
+    public static function init($config, $db)
     {
         // Set platform information
         \Mobbex\Platform::init(
@@ -28,5 +29,8 @@ class MobbexSdk
 
         // Init api conector
         \Mobbex\Api::init();
+
+        //Load models in sdk
+        \Mobbex\Platform::loadModels(null, $db);
     }
 } 
