@@ -16,12 +16,11 @@ class ControllerExtensionPaymentMobbex extends Controller
         $this->load->model('checkout/order');
         $this->load->language('extension/payment/mobbex');
         $this->load->model('setting/setting');
-        $this->load->model('extension/mobbex/db');
-        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
+        $this->mobbexConfig = new MobbexConfig($this->registry);
         $this->logger       = new MobbexLogger($this->mobbexConfig);
 
         //Init sdk classes
-        \MobbexSdk::init($this->mobbexConfig, $this->model_extension_mobbex_db->getDbModel());
+        (new \MobbexSdk($this->registry))->init();
     }
 
     public function index()

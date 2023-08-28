@@ -2,16 +2,25 @@
 
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/logger.php';
+require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/config.php';
 
-class MobbexSdk
+class MobbexSdk extends Model
 {
+    public function __construct($registry)
+    {
+        parent::__construct($registry);
+
+        //Load models
+        $this->mobbexConfig = new MobbexConfig($registry);
+        $this->mobbexLogger = new MobbexLogger($registry);
+        $this->mobbexDb     = new MobbexDb($registry);
+    }
     /**
      * Allow to use Mobbex php plugins sdk classes.
      * 
-     * @param MobbexConfig $config Mobbex Config Class
-     * @param ModelExtensionMobbexDb $db Mobbex Db Class
      */
-    public static function init($config, $db)
+    public function init()
     {
         // Set platform information
         \Mobbex\Platform::init(
@@ -22,15 +31,15 @@ class MobbexSdk
                 'platform' => VERSION,
                 'sdk'      => class_exists('\Composer\InstalledVersions') ? \Composer\InstalledVersions::getVersion('mobbexco/php-plugins-sdk') : '',
             ], 
-            $config->settings, 
+            $this->mobbexConfig->settings, 
             null,
-            [new MobbexLogger($config), 'log']
+            [$this->mobbexLogger, 'log']
         );
 
         // Init api conector
         \Mobbex\Api::init();
 
         //Load models in sdk
-        \Mobbex\Platform::loadModels(null, $db);
+        \Mobbex\Platform::loadModels(null, $this->mobbexDb);
     }
 } 

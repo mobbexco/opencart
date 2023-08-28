@@ -18,12 +18,11 @@ class ControllerExtensionPaymentMobbex extends Controller
         // load models and instance helper
         $this->load->model('setting/setting');
         $this->load->language('extension/payment/mobbex');
-        $this->load->model('extension/mobbex/db');
-        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
-        $this->logger       = new MobbexLogger($this->mobbexConfig);
+        $this->mobbexConfig = new MobbexConfig($this->registry);
+        $this->logger       = new MobbexLogger($this->registry);
 
         //Init sdk classes
-        \MobbexSdk::init($this->mobbexConfig, $this->model_extension_mobbex_db->getDbModel());
+        (new \MobbexSdk($this->registry))->init();
     }
 
     public function index()
@@ -165,6 +164,6 @@ class ControllerExtensionPaymentMobbex extends Controller
         if (isset($this->request->post["payment_mobbex_$config"]))
             return $this->request->post["payment_mobbex_$config"];
 
-        return $this->config->get("payment_mobbex_$config");
+        return $this->mobbexConfig->$config;
     }
 }

@@ -5,16 +5,16 @@
  * 
  * This class alow the Mobbex php-plugins-sdk interact with platform database.
  */
-class ModelExtensionMobbexDb extends Model
+class MobbexDb extends Model
 {
     /** DB Tables prefix */
     public $prefix = DB_PREFIX;
 
-    public function getDbModel()
+    public function __construct($registry)
     {
-        return $this;
+        parent::__construct($registry);
     }
-
+    
     /**
      * Executes a sql query & return the results.
      * 
