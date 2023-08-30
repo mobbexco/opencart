@@ -12,7 +12,7 @@ class ControllerExtensionModuleMobbexFinanceWidget extends Controller
     {
         // load models
 		$this->load->model('setting/setting');
-		$this->mobbexConfig = new MobbexConfig($this->model_setting_setting);
+		$this->mobbexConfig = new MobbexConfig($this->registry);
 
         if(
             (!$this->mobbexConfig->active_product && $this->request->get['route'] == 'product/product') 
@@ -22,8 +22,8 @@ class ControllerExtensionModuleMobbexFinanceWidget extends Controller
             return;
         }
 
-		//Init sdk classes
-		\MobbexSdk::init($this->mobbexConfig);
+        //Init sdk classes
+        (new \MobbexSdk($this->registry))->init();
 
         $data = [
             'price'   => $this->getPrice($this->request->get['route']),

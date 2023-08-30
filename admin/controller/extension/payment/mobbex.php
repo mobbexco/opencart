@@ -8,19 +8,27 @@ class ControllerExtensionPaymentMobbex extends Controller
     /** @var MobbexConfig */
     public static $config;
 
-    public function index()
+    /** Notices about tables creation */
+    public $schemaNotices = [];
+
+    public function __construct()
     {
-        
-        // First check that it's installed correctly
-        $this->install();
+        parent::__construct(...func_get_args());
 
         // load models and instance helper
         $this->load->model('setting/setting');
         $this->load->language('extension/payment/mobbex');
-        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting);
+        $this->mobbexConfig = new MobbexConfig($this->registry);
+        $this->logger       = new MobbexLogger($this->registry);
 
         //Init sdk classes
-        \MobbexSdk::init($this->mobbexConfig);
+        (new \MobbexSdk($this->registry))->init();
+    }
+
+    public function index()
+    {
+        // First check that it's installed correctly
+        $this->install();
 
         if ($this->request->server['REQUEST_METHOD'] == 'POST') {
             // Save configuration on post
@@ -38,22 +46,29 @@ class ControllerExtensionPaymentMobbex extends Controller
      */
     public function install()
     {
-        $this->db->query(
-            "CREATE TABLE IF NOT EXISTS `" . DB_PREFIX  . "mobbex_transaction` (
-                `cart_id` INT(11) NOT NULL,
-                `data` TEXT NOT NULL,
-                PRIMARY KEY (`cart_id`));"
-        );
-  
-        $this->db->query(
-            "CREATE TABLE IF NOT EXISTS `" . DB_PREFIX  . "mobbex_custom_fields` (
-                `id` INT(11) NOT NULL AUTO_INCREMENT,
-                `row_id` INT(11) NOT NULL,
-                `object` TEXT NOT NULL,
-                `field_name` TEXT NOT NULL,
-                `data` TEXT NOT NULL,
-                PRIMARY KEY (`id`));"
-        );
+        foreach (['transaction', 'custom_fields'] as $tableName) {
+            
+            //Get definition
+            $definition = \Mobbex\Model\Table::getTableDefinition($tableName);
+            
+            //Modify transaction definition
+            if($tableName === 'transaction'){
+                foreach ($definition as &$column)
+                    if($column['Field'] === 'order_id')
+                        $column['Field'] = 'cart_id';
+            }
+
+            //Create the table
+            $table = new \Mobbex\Model\Table($tableName, $definition);
+
+            //Show table warnings
+            foreach ($table->warning as $warning)
+                $this->schemaNotices['warning'][] = $warning;
+
+            //Show alert in case of error
+            if(!$table->result)
+                $this->schemaNotices['error'][] = str_replace('{TABLE}', $tableName, $this->language->get('error_table_creation'));
+        }
     }
 
     /**
@@ -108,6 +123,9 @@ class ControllerExtensionPaymentMobbex extends Controller
 
             // Plugin extra data
             'plugin_version'              => \MobbexConfig::$version,
+
+            //Schema notices
+            'schema_notices'                => $this->schemaNotices,
         ];
 
         // Return config view
@@ -146,6 +164,6 @@ class ControllerExtensionPaymentMobbex extends Controller
         if (isset($this->request->post["payment_mobbex_$config"]))
             return $this->request->post["payment_mobbex_$config"];
 
-        return $this->config->get("payment_mobbex_$config");
+        return $this->mobbexConfig->$config;
     }
 }

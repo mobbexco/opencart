@@ -9,18 +9,22 @@ class ControllerExtensionPaymentMobbex extends Controller
     /** @var MobbexConfig */
     public static $mobbexConfig;
 
-    public function index()
+    public function __construct()
     {
-         // load models and instance helper
+        parent::__construct(...func_get_args());
+        // load models and instance helper
         $this->load->model('checkout/order');
         $this->load->language('extension/payment/mobbex');
         $this->load->model('setting/setting');
-        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting);
-        $this->logger = new MobbexLogger($this->mobbexConfig);
+        $this->mobbexConfig = new MobbexConfig($this->registry);
+        $this->logger       = new MobbexLogger($this->registry);
 
         //Init sdk classes
-        \MobbexSdk::init($this->mobbexConfig);
+        (new \MobbexSdk($this->registry))->init();
+    }
 
+    public function index()
+    {
         // Get current order data
         $orderId = $this->session->data['order_id'];
         $order   = $this->model_checkout_order->getOrder($orderId);
@@ -38,16 +42,6 @@ class ControllerExtensionPaymentMobbex extends Controller
 
     public function callback()
     {
-        // load models and instance helper
-        $this->load->model('checkout/order');
-        $this->load->language('extension/payment/mobbex');
-        $this->load->model('setting/setting');
-        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting);
-        $this->logger = new MobbexLogger($this->mobbexConfig);
-
-        //Init sdk classes
-        \MobbexSdk::init($this->mobbexConfig);
-
         // Get return data
         $id     = $this->request->get['order_id'];
         $status = $this->request->get['status'];
@@ -77,17 +71,6 @@ class ControllerExtensionPaymentMobbex extends Controller
 
     public function webhook()
     {
-        // load models and instance helper
-        $this->load->model('checkout/order');
-        $this->load->language('extension/payment/mobbex');
-        $this->load->model('setting/setting');
-        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting);
-        $this->logger = new MobbexLogger($this->mobbexConfig);
-
-        //Init sdk classes
-        \MobbexSdk::init($this->mobbexConfig);
-        
-
         // Get and validate received data
         $id            = $this->request->get['order_id'];
         $token         = $this->request->get['mobbex_token'];

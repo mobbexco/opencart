@@ -5,9 +5,9 @@ class MobbexLogger
     /** @var Config */
     public $config;
 
-    public function __construct($config)
+    public function __construct($registry)
     {
-        $this->config = $config;
+        $this->config = new MobbexConfig($registry);
     }
 
     /**
