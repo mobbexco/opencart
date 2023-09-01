@@ -34,11 +34,70 @@ class MobbexConfig extends Model
      * 
      * @param string $replace Config key to replace.
      */
-    public function formatSettings($replace)
+    private function formatSettings($replace)
     {
         foreach ($this->model_setting_setting->getSetting($replace) as $key => $value) {
             $configKey = str_replace($replace.'_', '', $key);
             $this->settings[$configKey] = $this->$configKey = $value;
         }
     }
+
+    /**
+     * Get a Mobbex catalog option.
+     * 
+     * @param int|string $id Catalog id.
+     * @param string $object Type of searched config.
+     * @param string $catalogType Catalog type.
+     */
+    public function getCatalogOptions($id, $object, $catalogType = 'product')
+    {
+        if (strpos($object, '_plans'))
+            return unserialize($this->customField->get($id, $catalogType, $object)) ?: [];
+
+        return $this->customField->get($id, $catalogType, $object) ?: '';
+    }
+
+    /**
+     * Get all active plans from a given product and his categories
+     * 
+     * @param string $product_id
+     * 
+     * @return array
+     * 
+     */
+    public function getProductPlans($product_id)
+    {
+        $common_plans = $advanced_plans = [];
+
+        foreach (['common_plans', 'advanced_plans'] as $value) {
+            //Get product active plans
+            ${$value} = array_merge($this->getCatalogOptions($product_id, $value), ${$value});
+            //Get product category active plans
+            foreach ($this->getProdCategories($product_id) as $categoryId)
+                ${$value} = array_merge(${$value}, $this->getCatalogOptions($categoryId, $value, 'category'));
+        }
+
+        // Avoid duplicated plans
+        $common_plans   = array_unique($common_plans);
+        $advanced_plans = array_unique($advanced_plans);
+
+        return compact('common_plans', 'advanced_plans');
+    }
+
+    /**
+     * Get product categories id from product id.
+     * 
+     * @param string $product_id
+     * 
+     * @return array
+     */
+    public function getProdCategories($product_id)
+    {
+        //get the categories
+        $result = $this->db->query("SELECT category_id FROM " . DB_PREFIX . "product_to_category WHERE product_id = '" . (int)$product_id . "'");
+        
+        //Return categories in an array
+        return array_map(function($item){return $item['category_id'];}, $result->rows);
+    }
+
 }
