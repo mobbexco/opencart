@@ -11,6 +11,9 @@ class ControllerExtensionPaymentMobbex extends Controller
     /** Notices about tables creation */
     public $schemaNotices = [];
 
+    private $events = array(
+    );
+
     public function __construct()
     {
         parent::__construct(...func_get_args());
@@ -69,6 +72,9 @@ class ControllerExtensionPaymentMobbex extends Controller
             if(!$table->result)
                 $this->schemaNotices['error'][] = str_replace('{TABLE}', $tableName, $this->language->get('error_table_creation'));
         }
+        
+        //Register Events
+        $this->registerEvents();
     }
 
     /**
@@ -165,5 +171,18 @@ class ControllerExtensionPaymentMobbex extends Controller
             return $this->request->post["payment_mobbex_$config"];
 
         return $this->mobbexConfig->$config;
+    }
+
+    /**
+     * Register mobbex callbacks in opencart events.
+     */
+    public function registerEvents()
+    {
+        $this->load->model('setting/event');
+        $this->model_setting_event->deleteEventByCode('mobbex');
+        foreach ($this->events as $trigger => $actions) {
+            foreach ($actions as $action)
+                $this->model_setting_event->addEvent('mobbex', $trigger, $action);
+        }
     }
 }
