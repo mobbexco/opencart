@@ -1,5 +1,7 @@
 <?php
 
+require_once DIR_SYSTEM . 'library/mobbex/custom_field.php';
+
 /**
  * MobbexConfig
  * 
@@ -15,13 +17,15 @@ class MobbexConfig extends Model
 
     public function __construct($registry)
     {
-
         parent::__construct($registry);
         $this->load->model('setting/setting');
 
         //Set mobbex settings as properties
         $this->formatSettings('payment_mobbex');
         $this->formatSettings('module_mobbex_finance_widget');
+
+        //Load classes
+        $this->customField = new MobbexCustomField($registry);
 
     }
 
