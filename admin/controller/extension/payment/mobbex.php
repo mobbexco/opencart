@@ -18,6 +18,9 @@ class ControllerExtensionPaymentMobbex extends Controller
         'admin/model/catalog/product/editProduct/after' => array(
             'extension/mobbex/event/catalog/save_product'
         ),
+        'admin/view/common/header/before' => array(
+            'extension/mobbex/event/script/add_scripts'
+        ),
     );
 
     public function __construct()
