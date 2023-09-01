@@ -12,6 +12,12 @@ class ControllerExtensionPaymentMobbex extends Controller
     public $schemaNotices = [];
 
     private $events = array(
+        'admin/view/catalog/product_form/after' => array(
+            'extension/mobbex/event/catalog/product_form_after'
+        ),
+        'admin/model/catalog/product/editProduct/after' => array(
+            'extension/mobbex/event/catalog/save_product'
+        ),
     );
 
     public function __construct()
