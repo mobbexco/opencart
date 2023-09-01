@@ -100,4 +100,28 @@ class MobbexConfig extends Model
         return array_map(function($item){return $item['category_id'];}, $result->rows);
     }
 
+    /**
+     * Get all plans from given products ids
+     * 
+     * @param array $products
+     * 
+     * @return array $array
+     * 
+     */
+    public function getProductsPlans($products)
+    {
+        $common_plans = $advanced_plans = array();
+
+        foreach ($products as $product) {
+            // Merge all product plans
+            $product_plans  = $this->getProductPlans($product);
+
+            // Merge all catalog plans
+            $common_plans   = array_merge($common_plans, $product_plans['common_plans']);
+            $advanced_plans = array_merge($advanced_plans, $product_plans['advanced_plans']);
+        }
+
+        return compact('common_plans', 'advanced_plans');
+    }
+
 }

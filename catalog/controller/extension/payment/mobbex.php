@@ -123,10 +123,14 @@ class ControllerExtensionPaymentMobbex extends Controller
         if (!in_array($order['currency_code'], ['ARS', 'ARG']))
             return;
 
-        $common_plans = $advanced_plans = [];
+        //Get products ids
+        $products_ids = array_map(function($item){return $item['product_id'];}, $this->cart->getProducts());
+
+        //Get products plans
+        extract($this->mobbexConfig->getProductsPlans($products_ids));
 
         try {
-
+            //Create Mobbex Checkout
             $mobbexCheckout = new \Mobbex\Modules\Checkout(
                 $this->session->data['order_id'],
                 $order['total'],
