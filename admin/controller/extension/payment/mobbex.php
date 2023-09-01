@@ -61,10 +61,6 @@ class ControllerExtensionPaymentMobbex extends Controller
             //Create the table
             $table = new \Mobbex\Model\Table($tableName, $definition);
 
-            //Show table warnings
-            foreach ($table->warning as $warning)
-                $this->schemaNotices['warning'][] = $warning;
-
             //Show alert in case of error
             if(!$table->result)
                 $this->schemaNotices['error'][] = str_replace('{TABLE}', $tableName, $this->language->get('error_table_creation'));
