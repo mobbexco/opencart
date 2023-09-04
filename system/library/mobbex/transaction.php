@@ -37,13 +37,13 @@ class MobbexTransaction extends Model
             $names[]  = $column['column_name'];
             $values[] = $data[$column['column_name']];
         }
-
+        // Sets up the part of the query referring to values
         $queryValues = '';
 
         foreach ($values as $key => $value)
             $queryValues .= $key == 0 ? "'$value'" : ", '$value'";
 
-        // Set query
+        // Sets query
         $query = "INSERT INTO {$this->tableName} (" . implode(', ', $names) . ") VALUES ($queryValues);";
 
         $this->db->query($query);
