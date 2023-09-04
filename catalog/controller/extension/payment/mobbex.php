@@ -3,6 +3,8 @@
 require_once DIR_SYSTEM . 'library/mobbex/config.php';
 require_once DIR_SYSTEM . 'library/mobbex/sdk.php';
 require_once DIR_SYSTEM . 'library/mobbex/logger.php';
+require_once DIR_SYSTEM . 'library/mobbex/transaction.php';
+
 
 class ControllerExtensionPaymentMobbex extends Controller
 {
@@ -78,56 +80,34 @@ class ControllerExtensionPaymentMobbex extends Controller
 
     public function webhook()
     {
-        // load models and instance helper
+        // Load models
         $this->load->model('checkout/order');
         $this->load->language('extension/payment/mobbex');
         $this->load->model('setting/setting');
+
+        // Instance mobbex models
         $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
-        $this->logger = new MobbexLogger($this->mobbexConfig);
+        $this->logger       = new MobbexLogger($this->mobbexConfig);
+        $this->transaction  = new MobbexTransaction($this->registry);
 
-        //Init sdk classes
+        // Init sdk classes
         \MobbexSdk::init($this->mobbexConfig);
-        
 
-        // Get and validate received data from query params
-        $id        = $this->request->get['order_id'];
-        $cartId    = $this->request->get['cart_id'];
-        $token     = $this->request->get['mobbex_token'];
-        $postData  = isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json' ? json_decode(file_get_contents('php://input'), true)['data'] : $this->request->post['data'];
-        // Format data so that it is clean for saving in database
-        $data      = $this->helper->formatWebhookData($postData, $id);
-
-        if (empty($id) || empty($cartId) || empty($token) || empty($postData))
-            die("WebHook Error: Empty ID, Cart Id, token or post body. v{$this->helper::$version}");
-
-        if ($token != $this->helper->generateToken())
-            die("WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
-
-        if (empty($postData['checkout']))
-            die("WebHook Error: This endpoint can only receive checkout type calls. v{$this->helper::$version}");
-
-        // Get new order status
-        $status      = $postData['payment']['status']['code'];
-        $state       = $this->helper->getState($status);
-        // Get and validate received data
+        // Get data from query params
         $id            = $this->request->get['order_id'];
         $token         = $this->request->get['mobbex_token'];
         $data          = isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json' ? json_decode(file_get_contents('php://input'), true)['data'] : $this->request->post['data'];
+        $cartId        = $this->request->get['cart_id'];
         $mobbexVersion = MobbexConfig::$version;
-
-        error_log('post: ' . "\n" . json_encode($this->request->post, JSON_PRETTY_PRINT) . "\n", 3, 'log.log');
 
         $this->logger->log('debug', "ControllerExtensionPaymentMobbex > webhook | Process Webhook", $data);
 
-        if (empty($id) || empty($token) || empty($data))
-            die("WebHook Error: Empty ID, token or post body. v{$mobbexVersion}");
+        // Validate data
+        if (empty($id) || empty($cartId) ||  empty($token)  || empty($data))
+            die("WebHook Error: Empty ID, cart id, token or post body. v{$mobbexVersion}");
 
         if (!\Mobbex\Repository::validateToken($token))
-            die("WebHook Error: Empty ID, token or post body. v{$mobbexVersion}");
-            $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
-
-        if ($token != $this->helper->generateToken())
-            $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
+            die("WebHook Error: Invalid token. v{$mobbexVersion}");
 
         // Get new order status
         $status      = $data['payment']['status']['code'];
@@ -145,9 +125,13 @@ class ControllerExtensionPaymentMobbex extends Controller
         }
 
         // Update order status
-        $this->model_checkout_order->addOrderHistory($id, $orderStatus, $this->createOrderComment($postData), $state == 'approved');
+        $this->model_checkout_order->addOrderHistory($id, $orderStatus, $this->createOrderComment($data), $state == 'approved');
+
+        // Format transaction data
+        $trxData = $this->transaction->formatWebhookData($data, $cartId);
+
         // Save formated data in mobbex transaction table
-        $this->helper->saveTransaction($this->db, $cartId, $data);
+        $this->transaction->saveTransaction($trxData);
     }
 
     /**
@@ -258,7 +242,8 @@ class ControllerExtensionPaymentMobbex extends Controller
             'mobbex_token' => \Mobbex\Repository::generateToken(),
             'platform'     => 'opencart',
             'version'      => MobbexConfig::$version,
-            'order_id'     => $order['order_id']
+            'order_id'     => $order['order_id'],
+            'cart_id'      => $this->getCartId()
         ];
         //Add Xdebug as query if debug mode is active
         if ($endpoint === 'webhook' && $this->mobbexConfig->debug_mode)
