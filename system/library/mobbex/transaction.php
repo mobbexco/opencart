@@ -30,21 +30,16 @@ class MobbexTransaction extends Model
         // Get column names in db
         $columns = $this->db->query("SHOW COLUMNS FROM {$this->tableName} ");
 
-        $names = $values = [];
+        $names = $values = '';
 
         // Assign data to the corresponding column
-        foreach ($columns->rows as $column) {
-            $names[]  = $column['column_name'];
-            $values[] = $data[$column['column_name']];
+        foreach ($columns->rows as $key => $column) {
+            $names  .= $key == 0 ? "{$column['Field']}" : ", {$column['Field']}";
+            $values .= $key == 0 ? "'{$data[$column['Field']]}'" : ", '{$data[$column['Field']]}'";
         }
-        // Sets up the part of the query referring to values
-        $queryValues = '';
-
-        foreach ($values as $key => $value)
-            $queryValues .= $key == 0 ? "'$value'" : ", '$value'";
 
         // Sets query
-        $query = "INSERT INTO {$this->tableName} (" . implode(', ', $names) . ") VALUES ($queryValues);";
+        $query = "INSERT INTO {$this->tableName} ($names) VALUES ($values);";
 
         $this->db->query($query);
     }
