@@ -112,8 +112,7 @@ class ControllerExtensionPaymentMobbex extends Controller
     {
         // Check currency support
         if (!in_array($order['currency_code'], ['ARS', 'ARG'])){
-            error_log('The configured currency is not valid. Set as currency ARS:' . $order['currency_code']);
-                return;
+            $this->log->write($this->language->get('currency_error'));
         }
 
         $data = [
