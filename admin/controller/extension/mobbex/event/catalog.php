@@ -23,7 +23,7 @@ class ControllerExtensionMobbexEventCatalog extends controller {
     }
 
     /**
-     * Logic to execute after product admin form template loaded.
+     * Logic to execute after product|category admin form template loaded.
      * 
      * @param string $route
      * @param array $route
@@ -31,17 +31,20 @@ class ControllerExtensionMobbexEventCatalog extends controller {
      * 
      * @return string
      */
-    public function product_form_after(&$route, &$data, &$output)
+    public function catalog_form_after(&$route, &$data, &$output)
     {
-        //Get the product id
-        $product_id = $this->request->get['product_id'];
+        //get catalog type
+        $catalogType = strpos($route, 'product') ? 'product' : 'category';
 
-        //Return if there arent product id
-        if(empty($product_id))
+        //Get the catalog id
+        $id = $this->request->get[$catalogType.'_id'];
+
+        //Return if there arent catalog id
+        if(empty($id))
             return;
 
         //Get plans configurations
-        $sources = $this->getProductSources($product_id);
+        $sources = $this->getCatalogSources($id, $catalogType);
 
         //Get translations
         $translations = [
@@ -52,7 +55,7 @@ class ControllerExtensionMobbexEventCatalog extends controller {
         ];
 
         //Set template data
-        $templateData = array_merge($sources, $translations);
+        $templateData = array_merge($sources, $translations, ['catalogType' => $catalogType]);
 
         //Load mobbex product options template
         $snippet = $this->load->view('extension/mobbex/catalog_settings', $templateData);
@@ -102,19 +105,21 @@ class ControllerExtensionMobbexEventCatalog extends controller {
     }
 
     /**
-     * Get Mobbex sources for a product
+     * Get Mobbex sources for a product or category
      * 
-     * @param int|string $product_id
+     * @param int|string $id
+     * @param string $catalogType Object type 
+     * 
+     * @return array
      */
-    public function getProductSources($product_id)
+    public function getCatalogSources($id, $catalogType)
     {
         try {
-
-            //get profuct plans
-            extract($this->mobbexConfig->getProductPlans($product_id));
+            //get catalog plans
+            extract($this->mobbexConfig->getCatalogPlans($id, $catalogType, true));
 
             //return filtered plans
-            return \Mobbex\Repository::getPlansFilterFields($product_id, $common_plans, $advanced_plans);
+            return \Mobbex\Repository::getPlansFilterFields($id, $common_plans, $advanced_plans);
 
         } catch (\Mobbex\Exception $e) {
 

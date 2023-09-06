@@ -60,21 +60,25 @@ class MobbexConfig extends Model
     /**
      * Get all active plans from a given product and his categories
      * 
-     * @param string $product_id
+     * @param string $id product or category id
+     * @param string $catalogType type of object
+     * @param bool $admin If is called in admin section
      * 
      * @return array
      * 
      */
-    public function getProductPlans($product_id)
+    public function getCatalogPlans($id, $catalogType = 'product', $admin = false)
     {
         $common_plans = $advanced_plans = [];
 
         foreach (['common_plans', 'advanced_plans'] as $value) {
-            //Get product active plans
-            ${$value} = array_merge($this->getCatalogOptions($product_id, $value), ${$value});
-            //Get product category active plans
-            foreach ($this->getProdCategories($product_id) as $categoryId)
-                ${$value} = array_merge(${$value}, $this->getCatalogOptions($categoryId, $value, 'category'));
+            //Get catalog active plans
+            ${$value} = array_merge($this->getCatalogOptions($id, $value, $catalogType), ${$value});
+            
+            //If is product in checkout get plans active in the categories
+            if(!$admin)
+                foreach ($this->getProdCategories($id) as $categoryId)
+                    ${$value} = array_merge(${$value}, $this->getCatalogOptions($categoryId, $value, 'category'));
         }
 
         // Avoid duplicated plans
@@ -114,7 +118,7 @@ class MobbexConfig extends Model
 
         foreach ($products as $product) {
             // Merge all product plans
-            $product_plans  = $this->getProductPlans($product);
+            $product_plans  = $this->getCatalogPlans($product);
 
             // Merge all catalog plans
             $common_plans   = array_merge($common_plans, $product_plans['common_plans']);
