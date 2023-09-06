@@ -65,20 +65,23 @@ class ControllerExtensionMobbexEventCatalog extends controller {
     }
 
     /**
-     * Logic to execute after product configs get saved
+     * Logic to execute after product|category configs get saved
      * 
      * @param string $route
      * @param array $route
      * @param string $route
      * 
      */
-    public function save_product_after(&$route, &$data, &$output)
+    public function save_catalog_after(&$route, &$data, &$output)
     {
-        //Get product id
-        $product_id = $this->request->get['product_id'];
+        //get catalog type
+        $catalogType = strpos($route, 'product') ? 'product' : 'category';
+
+        //Get the catalog id
+        $id = $this->request->get[$catalogType . '_id'];
 
         //Return if there arent product id
-        if(empty($product_id))
+        if(empty($id))
             return;
 
         $commonPlans = $advancedPlans = array();
@@ -101,7 +104,7 @@ class ControllerExtensionMobbexEventCatalog extends controller {
 
         //Save mobbex configs in custom fields
         foreach ($configs as $key => $value)
-            $this->customField->save($product_id, 'product', $key, $value);
+            $this->customField->save($id, $catalogType, $key, $value);
     }
 
     /**
