@@ -25,9 +25,15 @@ class ControllerExtensionModuleMobbexFinanceWidget extends Controller
         //Init sdk classes
         (new \MobbexSdk($this->registry))->init();
 
+        //Get product ids
+        $products_ids = $this->request->get['route'] == 'product/product' ? [$this->request->get['product_id']] : array_map(function ($item) {return $item['product_id'];}, $this->cart->getProducts());
+
+        //Get products plans
+        extract($this->mobbexConfig->getProductsPlans($products_ids));
+
         $data = [
             'price'   => $this->getPrice($this->request->get['route']),
-            'sources' => \Mobbex\Repository::getSources($this->getPrice($this->request->get['route'])),
+            'sources' => \Mobbex\Repository::getSources($this->getPrice($this->request->get['route']), \Mobbex\Repository::getInstallments($products_ids, $common_plans, $advanced_plans)),
 			'theme'   => 'light',
             'button'  => [
                 'custom_styles' => $this->mobbexConfig->button_styles,
