@@ -5,7 +5,7 @@ require_once __DIR__ . '/logger.php';
 class MobbexHelper
 {
     /** @var string */
-    public static $version = '1.0.23';
+    public static $version = '1.0.0';
 
     /** Mobbex API base URL */
     public static $apiUrl = 'https://api.mobbex.com/p/';
@@ -98,19 +98,6 @@ class MobbexHelper
     }
 
     /**
-     * Create token to protect API endpoints.
-     * 
-     * @return string 
-     */
-    public function generateToken()
-    {
-        $apiKey      = $this->config->get('payment_mobbex_api_key');
-        $accessToken = $this->config->get('payment_mobbex_access_token');
-
-        return md5($apiKey . '|' . $accessToken);
-    }
-
-    /**
      * Get payment state from Mobbex status code.
      * 
      * @param int|string $status
@@ -129,4 +116,38 @@ class MobbexHelper
             return 'failed';
         }
 	}
+
+    /**
+     * Generate a token using current credentials configured.
+     * 
+     * @return string 
+     */
+    public function generateToken()
+    {
+        $apiKey      = $this->config->get('payment_mobbex_api_key');
+        $accessToken = $this->config->get('payment_mobbex_access_token');
+
+        return password_hash(
+            "{$apiKey}|{$accessToken}",
+            PASSWORD_DEFAULT
+        );
+    }
+
+    /**
+     * Validate a token generated from credentials configured.
+     * 
+     * @param mixed $token
+     * 
+     * @return bool True if token is valid.
+     */
+    public function validateToken($token)
+    {
+        $apiKey      = $this->config->get('payment_mobbex_api_key');
+        $accessToken = $this->config->get('payment_mobbex_access_token');
+
+        return password_verify(
+            "{$apiKey}|{$accessToken}",
+            $token
+        );
+    }
 }

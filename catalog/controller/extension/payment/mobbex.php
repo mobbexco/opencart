@@ -52,7 +52,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         }
 
         // If the token is invalid, redirect to checkout with error
-        if ($token != $this->helper->generateToken()) {
+        if (!$this->helper->validateToken($token)) {
             // Redirect to checkout with error
             $this->session->data['error'] = $this->language->get('token_error');
             $this->logger->log('error', "ControllerExtensionPaymentMobbex > callback | " . $this->language->get('token_error'));
@@ -84,7 +84,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         if (empty($id) || empty($token) || empty($data))
             $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
 
-        if ($token != $this->helper->generateToken())
+        if (!$this->helper->validateToken($token))
             $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
 
         if ($this->request->post['type'] != 'checkout')
@@ -119,14 +119,15 @@ class ControllerExtensionPaymentMobbex extends Controller
     private function getCheckout($order)
     {
         // Check currency support
-        if (!in_array($order['currency_code'], ['ARS', 'ARG']))
-            return;
+        if (!in_array($order['currency_code'], ['ARS', 'ARG'])){
+            $this->log->write($this->language->get('currency_error'));
+        }
 
         $data = [
             'uri'    => 'checkout',
             'method' => 'POST',
             'body'   => [
-                'total'        => (int) $order['total'],
+                'total'        => $order['total'],
                 'currency'     => (string) $order['currency_code'],
                 'webhook'      => (string) $this->getOrderEndpointUrl($order, 'webhook'),
                 'return_url'   => (string) $this->getOrderEndpointUrl($order, 'callback'),
@@ -135,7 +136,6 @@ class ControllerExtensionPaymentMobbex extends Controller
                 'items'        => $this->getItems($order),
                 'customer'     => $this->getCustomer($order),
                 'test'         => (bool) $this->config->get('payment_mobbex_test_mode'),
-                'debug'        => (bool) $this->config->get('payment_mobbex_debug_mode'),
                 'timeout'      => 5,
                 'options'      => [
                     'domain'   => HTTPS_SERVER,
@@ -212,7 +212,7 @@ class ControllerExtensionPaymentMobbex extends Controller
             'order_id'     => $order['order_id']
         ];
         //Add Xdebug as query if debug mode is active
-        if ($endpoint === 'webhook' && $this->config->get('payment_mobbex_debug_mode'))
+        if ($this->config->get('payment_mobbex_debug_mode'))
             $args['XDEBUG_SESSION_START'] = 'PHPSTORM';
 
         return $this->url->link("extension/payment/mobbex/$endpoint", '', true) . '&' . http_build_query($args);
