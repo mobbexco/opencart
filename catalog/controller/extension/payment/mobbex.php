@@ -111,8 +111,9 @@ class ControllerExtensionPaymentMobbex extends Controller
     private function getCheckout($order)
     {
         // Check currency support
-        if (!in_array($order['currency_code'], ['ARS', 'ARG']))
-            return;
+        if (!in_array($order['currency_code'], ['ARS', 'ARG'])){
+            $this->log->write($this->language->get('currency_error'));
+        }
 
         $data = [
             'uri'    => 'checkout',
