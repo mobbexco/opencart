@@ -16,4 +16,5 @@ $_ = [
     'access_token'      => 'Token de Acceso',
     'test_mode'         => 'Modo de Pruebas',
     'debug_mode'        => 'Modo Depuración',
+    'multicard'         => 'Multicard',
 ];
