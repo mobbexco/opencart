@@ -132,18 +132,9 @@ class ControllerExtensionPaymentMobbex extends Controller
         $data          = isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json' ? json_decode(file_get_contents('php://input'), true)['data'] : $this->request->post['data'];
         $mobbexVersion = MobbexConfig::$version;
 
-        error_log('post: ' . "\n" . json_encode($this->request->post, JSON_PRETTY_PRINT) . "\n", 3, 'log.log');
-
         $this->logger->log('debug', "ControllerExtensionPaymentMobbex > webhook | Process Webhook", $data);
 
-        if (empty($id) || empty($token) || empty($data))
-            die("WebHook Error: Empty ID, token or post body. v{$mobbexVersion}");
-
-        if (!\Mobbex\Repository::validateToken($token))
-            die("WebHook Error: Empty ID, token or post body. v{$mobbexVersion}");
-            $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
-
-        if ($token != $this->helper->generateToken())
+        if (!\Mobbex\Repository::validateToken($token) || empty($id) || empty($data))
             $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
 
         // Get new order status
@@ -175,8 +166,9 @@ class ControllerExtensionPaymentMobbex extends Controller
     private function getCheckout($order)
     {
         // Check currency support
-        if (!in_array($order['currency_code'], ['ARS', 'ARG']))
-            return;
+        if (!in_array($order['currency_code'], ['ARS', 'ARG'])){
+            $this->log->write($this->language->get('currency_error'));
+        }
 
         $common_plans = $advanced_plans = [];
 
@@ -259,8 +251,9 @@ class ControllerExtensionPaymentMobbex extends Controller
             'version'      => MobbexConfig::$version,
             'order_id'     => $order['order_id']
         ];
+
         //Add Xdebug as query if debug mode is active
-        if ($endpoint === 'webhook' && $this->mobbexConfig->debug_mode)
+        if ($this->mobbexConfig->debug_mode)
             $args['XDEBUG_SESSION_START'] = 'PHPSTORM';
 
         return $this->url->link("extension/payment/mobbex/$endpoint", '', true) . '&' . http_build_query($args);

@@ -69,6 +69,8 @@ class ControllerExtensionPaymentMobbex extends Controller
         $data = [
             // Get global text translations
             'heading_title' => $this->language->get('heading_title'),
+            // Checks if current currency is supported by Mobbex
+            'ars_currency'  => $this->config->get('config_currency') == 'ARS',
 
             // Get template sections
             'header' 	    => $this->load->controller('common/header'),
@@ -99,14 +101,17 @@ class ControllerExtensionPaymentMobbex extends Controller
             'payment_mobbex_api_key'      => $this->getFormConfig('api_key'),
             'payment_mobbex_access_token' => $this->getFormConfig('access_token'),
             'payment_mobbex_debug_mode'   => $this->getFormConfig('debug_mode'),
-            'payment_mobbex_embed'   => $this->getFormConfig('embed'),
+            'payment_mobbex_embed'        => $this->getFormConfig('embed'),
+            'payment_mobbex_multicard'    => $this->getFormConfig('multicard'),
 
+            // Labels
             'status_label'                 => $this->language->get('status'),
             'test_mode_label'              => $this->language->get('test_mode'),
             'api_key_label'                => $this->language->get('api_key'),
             'access_token_label'           => $this->language->get('access_token'),
             'debug_mode_label'             => $this->language->get('debug_mode'),
-            'embed_label'             => $this->language->get('embed'),
+            'embed_label'                  => $this->language->get('embed'),
+            'multicard_label'              => $this->language->get('multicard'),
 
             // Plugin extra data
             'plugin_version'              => \MobbexConfig::$version,
