@@ -129,8 +129,9 @@ class ControllerExtensionPaymentMobbex extends Controller
     private function getCheckout($order)
     {
         // Check currency support
-        if (!in_array($order['currency_code'], ['ARS', 'ARG']))
-            return;
+        if (!in_array($order['currency_code'], ['ARS', 'ARG'])){
+            $this->log->write($this->language->get('currency_error'));
+        }
 
         $common_plans = $advanced_plans = [];
 
@@ -213,8 +214,9 @@ class ControllerExtensionPaymentMobbex extends Controller
             'version'      => MobbexConfig::$version,
             'order_id'     => $order['order_id']
         ];
+
         //Add Xdebug as query if debug mode is active
-        if ($endpoint === 'webhook' && $this->mobbexConfig->debug_mode)
+        if ($this->mobbexConfig->debug_mode)
             $args['XDEBUG_SESSION_START'] = 'PHPSTORM';
 
         return $this->url->link("extension/payment/mobbex/$endpoint", '', true) . '&' . http_build_query($args);

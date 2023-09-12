@@ -69,6 +69,8 @@ class ControllerExtensionPaymentMobbex extends Controller
         $data = [
             // Get global text translations
             'heading_title' => $this->language->get('heading_title'),
+            // Checks if current currency is supported by Mobbex
+            'ars_currency'  => $this->config->get('config_currency') == 'ARS',
 
             // Get template sections
             'header' 	    => $this->load->controller('common/header'),
