@@ -97,7 +97,7 @@ class ControllerExtensionPaymentMobbex extends Controller
 
         $this->logger->log('debug', "ControllerExtensionPaymentMobbex > webhook | Process Webhook", $data);
 
-        if (!\Mobbex\Repository::validateToken($token) || empty($id) || empty($data) || $token != $this->helper->generateToken())
+        if (!\Mobbex\Repository::validateToken($token) || empty($id) || empty($data))
             $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
 
         // Get new order status
