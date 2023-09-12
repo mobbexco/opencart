@@ -24,6 +24,16 @@ class ControllerExtensionPaymentMobbex extends Controller
         // Get current order data
         $orderId = $this->session->data['order_id'];
         $order   = $this->model_checkout_order->getOrder($orderId);
+        
+        // Sets dni field
+        $order['dni'] = $this->getDni($order['custom_field']); 
+        if (!$order['dni']){
+            $link        = $this->url->link('account/edit');
+            $dniRequired = $this->language->get('dni_required');
+            $dniAlert    = $this->language->get('dni_alert');
+            // Displays a button that redirects to customer account edit
+            return $this->load->view('extension/mobbex/dni_required', compact('link', 'dniRequired', 'dniAlert'));
+        }
 
         //Assign data to template
         $data = [
@@ -228,10 +238,11 @@ class ControllerExtensionPaymentMobbex extends Controller
     private function getCustomer($order)
     {
         return [
-            'name'  => $order['payment_firstname'] . ' ' . $order['payment_lastname'],
-            'email' => $order['email'],
-            'phone' => $order['telephone'],
-            'uid'   => $this->customer->getId(),
+            'identification' => $order['dni'],
+            'email'          => $order['email'],
+            'phone'          => $order['telephone'],
+            'uid'            => $this->customer->getId(),
+            'name'           => $order['payment_firstname'] . ' ' . $order['payment_lastname'],
         ];
     }
 
@@ -319,6 +330,42 @@ class ControllerExtensionPaymentMobbex extends Controller
             [$date, $paymentId, $paymentTotal, $paymentMethod, $installments, $riskAnalysis, $entityUid], 
             $this->language->get('order_comment')
         );
+    }
+
+    /**
+     * Get customer DNI.
+     * 
+     * @param array  $customFields
+     * 
+     * @return string $value DNI value
+     * 
+     */
+    private function getDni($customFields)
+    {
+        if (!$customFields)
+            return '';
+        
+        $dniField = $this->getDniValue($customFields);
+
+        return $dniField;
+    }
+
+    /**
+     *  Find DNI custom field and get its value
+     * 
+     * @param array  $customFields
+     * 
+     * @return string $value DNI value
+     * 
+     */
+    public function getDniValue($customFields)
+    {
+        foreach ($customFields as $key => $value)
+            // Find the custom field with DNI name
+            $name = $this->db->query("SELECT name FROM `" . DB_PREFIX . "custom_field_description` WHERE custom_field_id = " . $key . ";")->row['name'];
+            if ($name == 'DNI')
+                // Gets DNI value from DNI custom field
+                return $value;
     }
 
     /**

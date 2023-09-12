@@ -32,12 +32,13 @@ class ControllerExtensionPaymentMobbex extends Controller
     }
 
     /**
-     * Create Mobbex tables in database.
+     * Create Mobbex tables in database and add dni field to customer form in checkout.
      * 
      * @return void 
      */
     public function install()
     {
+        // Create tables
         $this->db->query(
             "CREATE TABLE IF NOT EXISTS `" . DB_PREFIX  . "mobbex_transaction` (
                 `cart_id` INT(11) NOT NULL,
@@ -54,6 +55,9 @@ class ControllerExtensionPaymentMobbex extends Controller
                 `data` TEXT NOT NULL,
                 PRIMARY KEY (`id`));"
         );
+
+        // Add dni field
+        $this->installDniField();
     }
 
     /**
@@ -155,4 +159,46 @@ class ControllerExtensionPaymentMobbex extends Controller
 
         return $this->config->get("payment_mobbex_$config");
     }
+
+    /**
+     * Add dni field to customer form at checkout if there is none
+     * 
+     */
+    public function installDniField()
+    {
+        // Load model
+        $this->load->model('customer/custom_field');
+
+        // Create a query to the database
+        $query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "custom_field_description` WHERE name = 'DNI'")->num_rows;
+        
+        // Check if an DNI custom field exists, otherwise set and creates it
+        if ($query != '0'){
+            return;
+        } else {
+            // Customize an array containing the information needed to create the field
+            $dniField = [
+                "value"      => "", 
+                "validation" => "",
+                "status"     => "1", 
+                "sort_order" => "5", 
+                "type"       => "text",
+                "location"   => "account",
+                "custom_field_description"    => [
+                    "1" => [ 
+                        "name" => "DNI" 
+                    ]
+                ],
+                "custom_field_customer_group" => [
+                    [
+                        "required"          => "1",
+                        "customer_group_id" => "1",
+                    ] 
+                ],
+            ];
+
+            // Add dni custom field
+            $this->model_customer_custom_field->addCustomField($dniField);
+        }
+    } 
 }
