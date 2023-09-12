@@ -95,18 +95,9 @@ class ControllerExtensionPaymentMobbex extends Controller
         $data          = isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json' ? json_decode(file_get_contents('php://input'), true)['data'] : $this->request->post['data'];
         $mobbexVersion = MobbexConfig::$version;
 
-        error_log('post: ' . "\n" . json_encode($this->request->post, JSON_PRETTY_PRINT) . "\n", 3, 'log.log');
-
         $this->logger->log('debug', "ControllerExtensionPaymentMobbex > webhook | Process Webhook", $data);
 
-        if (empty($id) || empty($token) || empty($data))
-            die("WebHook Error: Empty ID, token or post body. v{$mobbexVersion}");
-
-        if (!\Mobbex\Repository::validateToken($token))
-            die("WebHook Error: Empty ID, token or post body. v{$mobbexVersion}");
-            $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
-
-        if ($token != $this->helper->generateToken())
+        if (!\Mobbex\Repository::validateToken($token) || empty($id) || empty($data) || $token != $this->helper->generateToken())
             $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
 
         // Get new order status
