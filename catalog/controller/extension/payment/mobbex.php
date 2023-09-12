@@ -25,13 +25,10 @@ class ControllerExtensionPaymentMobbex extends Controller
         $orderId = $this->session->data['order_id'];
         $order   = $this->model_checkout_order->getOrder($orderId);
 
-        // Create Mobbex checkout
-        $checkout  = $this->getCheckout($order);
         //Assign data to template
         $data = [
             'textTitle'  => $this->language->get('text_title'),
             'embed'      => (bool) $this->mobbexConfig->settings['embed'],
-            'mbbxUrl'    => isset($checkout->url) ? $checkout->url : '',
             'mobbexData' => json_encode([
                 'settings'    => $this->mobbexConfig->settings,
                 'checkoutUrl' => $this->url->link("extension/payment/mobbex/checkout", '', true) . '&' . http_build_query(['order_id' => $orderId]),

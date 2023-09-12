@@ -6,9 +6,7 @@ jQuery(function ($) {
   //Event payment button
   $("#mobbex-payment").on("click", () => {
     //Open Mobbex checkout
-    if (!!parseInt(mobbexData.settings.embed))
-      createCheckout((response) => embedPayment(response));
-    else createCheckout((response) => redirectToCheckout(response));
+    createCheckout((response) => !!parseInt(mobbexData.settings.embed) ? embedPayment(response) : redirectToCheckout(response));
   });
 
   /**
