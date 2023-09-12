@@ -24,7 +24,7 @@ class MobbexLogger
     public function log($mode, $message, $data = [])
     {
         // Save log to db
-        if ($mode != 'debug' || $this->config->get('payment_mobbex_debug_mode')) {
+        if ($mode != 'debug' || $this->config->debug_mode) {
             //Create log
             $fileName = "mobbex_log_$mode". "_" . date('Y-m') . ".log";
             $log      = new \Log($fileName);
