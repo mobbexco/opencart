@@ -1,21 +1,26 @@
 <?php
 
-require_once DIR_SYSTEM . 'library/mobbex/helper.php';
+require_once DIR_SYSTEM . 'library/mobbex/sdk.php';
+require_once DIR_SYSTEM . 'library/mobbex/config.php';
 
 class ControllerExtensionPaymentMobbex extends Controller
 {
-    /** @var MobbexHelper */
-    public static $helper;
+    /** @var MobbexConfig */
+    public static $config;
 
     public function index()
     {
+        
         // First check that it's installed correctly
         $this->install();
 
         // load models and instance helper
         $this->load->model('setting/setting');
         $this->load->language('extension/payment/mobbex');
-        $this->helper = new MobbexHelper($this->config);
+        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
+
+        //Init sdk classes
+        \MobbexSdk::init($this->mobbexConfig);
 
         if ($this->request->server['REQUEST_METHOD'] == 'POST') {
             // Save configuration on post
@@ -31,7 +36,7 @@ class ControllerExtensionPaymentMobbex extends Controller
      * 
      * @return void 
      */
-    private function install()
+    public function install()
     {
         // Create tables
         $this->db->query(
@@ -68,6 +73,8 @@ class ControllerExtensionPaymentMobbex extends Controller
         $data = [
             // Get global text translations
             'heading_title' => $this->language->get('heading_title'),
+            // Checks if current currency is supported by Mobbex
+            'ars_currency'  => $this->config->get('config_currency') == 'ARS',
 
             // Get template sections
             'header' 	    => $this->load->controller('common/header'),
@@ -94,17 +101,24 @@ class ControllerExtensionPaymentMobbex extends Controller
 
             // Mobbex config fields
             'payment_mobbex_status'       => $this->getFormConfig('status'),
-            'payment_mobbex_test_mode'    => $this->getFormConfig('test_mode'),
+            'payment_mobbex_test'         => $this->getFormConfig('test'),
             'payment_mobbex_api_key'      => $this->getFormConfig('api_key'),
             'payment_mobbex_access_token' => $this->getFormConfig('access_token'),
+            'payment_mobbex_debug_mode'   => $this->getFormConfig('debug_mode'),
+            'payment_mobbex_embed'        => $this->getFormConfig('embed'),
+            'payment_mobbex_multicard'    => $this->getFormConfig('multicard'),
 
-            'status_label'                => $this->language->get('status'),
-            'test_mode_label'             => $this->language->get('test_mode'),
-            'api_key_label'               => $this->language->get('api_key'),
-            'access_token_label'          => $this->language->get('access_token'),
+            // Labels
+            'status_label'                 => $this->language->get('status'),
+            'test_mode_label'              => $this->language->get('test_mode'),
+            'api_key_label'                => $this->language->get('api_key'),
+            'access_token_label'           => $this->language->get('access_token'),
+            'debug_mode_label'             => $this->language->get('debug_mode'),
+            'embed_label'                  => $this->language->get('embed'),
+            'multicard_label'              => $this->language->get('multicard'),
 
             // Plugin extra data
-            'plugin_version'              => $this->helper::$version,
+            'plugin_version'              => \MobbexConfig::$version,
         ];
 
         // Return config view
