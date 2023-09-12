@@ -26,18 +26,62 @@ class ControllerExtensionPaymentMobbex extends Controller
         // Get current order data
         $orderId = $this->session->data['order_id'];
         $order   = $this->model_checkout_order->getOrder($orderId);
+        
+        // Sets dni field
+        $order['dni'] = $this->getDni($order['custom_field']); 
+        if (!$order['dni']){
+            $link        = $this->url->link('account/edit');
+            $dniRequired = $this->language->get('dni_required');
+            $dniAlert    = $this->language->get('dni_alert');
+            // Displays a button that redirects to customer account edit
+            return $this->load->view('extension/mobbex/dni_required', compact('link', 'dniRequired', 'dniAlert'));
+        }
 
-        // Create Mobbex checkout
-        $checkout = $this->getCheckout($order);
-        $mbbxUrl  = isset($checkout->url) ? $checkout->url : '';
-
-        // Get page text translations
-        $textTitle = $this->language->get('text_title');
+        //Assign data to template
+        $data = [
+            'textTitle'  => $this->language->get('text_title'),
+            'embed'      => (bool) $this->mobbexConfig->settings['embed'],
+            'mobbexData' => json_encode([
+                'settings'    => $this->mobbexConfig->settings,
+                'checkoutUrl' => $this->url->link("extension/payment/mobbex/checkout", '', true) . '&' . http_build_query(['order_id' => $orderId]),
+                'errorUrl'    => $this->url->link("extension/payment/mobbex/index", '', true),
+                'returnUrl'   => $this->getOrderEndpointUrl($order, 'callback'),
+            ]),
+        ];
 
         // Return view
-        return $this->load->view('extension/payment/mobbex', compact('mbbxUrl', 'textTitle'));
+        return $this->load->view('extension/payment/mobbex', $data);
     }
 
+    /**
+     * Endpoit to get Mobbex checkout.
+     */
+    public function checkout()
+    {
+        // load models and instance helper
+        $this->load->model('checkout/order');
+        $this->load->language('extension/payment/mobbex');
+        $this->load->model('setting/setting');
+        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
+        $this->logger = new MobbexLogger($this->mobbexConfig);
+
+        //Init sdk classes
+        \MobbexSdk::init($this->mobbexConfig);
+
+        // Get order
+        $orderId = $this->request->get['order_id'];
+        $order   = $this->model_checkout_order->getOrder($orderId);
+
+        //Get checkout
+        $checkout = $this->getCheckout($order);
+
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode($checkout->response));
+    }
+
+    /**
+     * Endpoint to return payment.
+     */
     public function callback()
     {
         // load models and instance helper
@@ -78,6 +122,9 @@ class ControllerExtensionPaymentMobbex extends Controller
         }
     }
 
+    /**
+     * Enpoint to process mobbex webhook.
+     */
     public function webhook()
     {
         // Load models
@@ -102,12 +149,8 @@ class ControllerExtensionPaymentMobbex extends Controller
 
         $this->logger->log('debug', "ControllerExtensionPaymentMobbex > webhook | Process Webhook", $data);
 
-        // Validate data
-        if (empty($id) || empty($cartId) ||  empty($token)  || empty($data))
-            die("WebHook Error: Empty ID, cart id, token or post body. v{$mobbexVersion}");
-
-        if (!\Mobbex\Repository::validateToken($token))
-            die("WebHook Error: Invalid token. v{$mobbexVersion}");
+        if (!\Mobbex\Repository::validateToken($token) || empty($id) || empty($data))
+            $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
 
         // Get new order status
         $status      = $data['payment']['status']['code'];
@@ -144,15 +187,16 @@ class ControllerExtensionPaymentMobbex extends Controller
     private function getCheckout($order)
     {
         // Check currency support
-        if (!in_array($order['currency_code'], ['ARS', 'ARG']))
-            return;
+        if (!in_array($order['currency_code'], ['ARS', 'ARG'])){
+            $this->log->write($this->language->get('currency_error'));
+        }
 
         $common_plans = $advanced_plans = [];
 
         try {
 
             $mobbexCheckout = new \Mobbex\Modules\Checkout(
-                $this->session->data['order_id'],
+                $order['order_id'],
                 $order['total'],
                 $this->getOrderEndpointUrl($order, 'callback'),
                 $this->getOrderEndpointUrl($order, 'webhook'),
@@ -220,10 +264,11 @@ class ControllerExtensionPaymentMobbex extends Controller
     private function getCustomer($order)
     {
         return [
-            'name'  => $order['payment_firstname'] . ' ' . $order['payment_lastname'],
-            'email' => $order['email'],
-            'phone' => $order['telephone'],
-            'uid'   => $this->customer->getId(),
+            'identification' => $order['dni'],
+            'email'          => $order['email'],
+            'phone'          => $order['telephone'],
+            'uid'            => $this->customer->getId(),
+            'name'           => $order['payment_firstname'] . ' ' . $order['payment_lastname'],
         ];
     }
 
@@ -245,8 +290,9 @@ class ControllerExtensionPaymentMobbex extends Controller
             'order_id'     => $order['order_id'],
             'cart_id'      => $this->getCartId()
         ];
+
         //Add Xdebug as query if debug mode is active
-        if ($endpoint === 'webhook' && $this->mobbexConfig->debug_mode)
+        if ($this->mobbexConfig->debug_mode)
             $args['XDEBUG_SESSION_START'] = 'PHPSTORM';
 
         return $this->url->link("extension/payment/mobbex/$endpoint", '', true) . '&' . http_build_query($args);
@@ -312,6 +358,42 @@ class ControllerExtensionPaymentMobbex extends Controller
             [$date, $paymentId, $paymentTotal, $paymentMethod, $installments, $riskAnalysis, $entityUid], 
             $this->language->get('order_comment')
         );
+    }
+
+    /**
+     * Get customer DNI.
+     * 
+     * @param array  $customFields
+     * 
+     * @return string $value DNI value
+     * 
+     */
+    private function getDni($customFields)
+    {
+        if (!$customFields)
+            return '';
+        
+        $dniField = $this->getDniValue($customFields);
+
+        return $dniField;
+    }
+
+    /**
+     *  Find DNI custom field and get its value
+     * 
+     * @param array  $customFields
+     * 
+     * @return string $value DNI value
+     * 
+     */
+    public function getDniValue($customFields)
+    {
+        foreach ($customFields as $key => $value)
+            // Find the custom field with DNI name
+            $name = $this->db->query("SELECT name FROM `" . DB_PREFIX . "custom_field_description` WHERE custom_field_id = " . $key . ";")->row['name'];
+            if ($name == 'DNI')
+                // Gets DNI value from DNI custom field
+                return $value;
     }
 
     /**
