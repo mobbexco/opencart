@@ -25,17 +25,51 @@ class ControllerExtensionPaymentMobbex extends Controller
         $orderId = $this->session->data['order_id'];
         $order   = $this->model_checkout_order->getOrder($orderId);
 
-        // Create Mobbex checkout
-        $checkout = $this->getCheckout($order);
-        $mbbxUrl  = isset($checkout->url) ? $checkout->url : '';
-
-        // Get page text translations
-        $textTitle = $this->language->get('text_title');
+        //Assign data to template
+        $data = [
+            'textTitle'  => $this->language->get('text_title'),
+            'embed'      => (bool) $this->mobbexConfig->settings['embed'],
+            'mobbexData' => json_encode([
+                'settings'    => $this->mobbexConfig->settings,
+                'checkoutUrl' => $this->url->link("extension/payment/mobbex/checkout", '', true) . '&' . http_build_query(['order_id' => $orderId]),
+                'errorUrl'    => $this->url->link("extension/payment/mobbex/index", '', true),
+                'returnUrl'   => $this->getOrderEndpointUrl($order, 'callback'),
+            ]),
+        ];
 
         // Return view
-        return $this->load->view('extension/payment/mobbex', compact('mbbxUrl', 'textTitle'));
+        return $this->load->view('extension/payment/mobbex', $data);
     }
 
+    /**
+     * Endpoit to get Mobbex checkout.
+     */
+    public function checkout()
+    {
+        // load models and instance helper
+        $this->load->model('checkout/order');
+        $this->load->language('extension/payment/mobbex');
+        $this->load->model('setting/setting');
+        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
+        $this->logger = new MobbexLogger($this->mobbexConfig);
+
+        //Init sdk classes
+        \MobbexSdk::init($this->mobbexConfig);
+
+        // Get order
+        $orderId = $this->request->get['order_id'];
+        $order   = $this->model_checkout_order->getOrder($orderId);
+
+        //Get checkout
+        $checkout = $this->getCheckout($order);
+
+        $this->response->addHeader('Content-Type: application/json');
+        $this->response->setOutput(json_encode($checkout->response));
+    }
+
+    /**
+     * Endpoint to return payment.
+     */
     public function callback()
     {
         // load models and instance helper
@@ -76,6 +110,9 @@ class ControllerExtensionPaymentMobbex extends Controller
         }
     }
 
+    /**
+     * Enpoint to process mobbex webhook.
+     */
     public function webhook()
     {
         // load models and instance helper
@@ -138,7 +175,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         try {
 
             $mobbexCheckout = new \Mobbex\Modules\Checkout(
-                $this->session->data['order_id'],
+                $order['order_id'],
                 $order['total'],
                 $this->getOrderEndpointUrl($order, 'callback'),
                 $this->getOrderEndpointUrl($order, 'webhook'),
