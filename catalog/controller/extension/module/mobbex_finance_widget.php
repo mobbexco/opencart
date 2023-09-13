@@ -11,8 +11,8 @@ class ControllerExtensionModuleMobbexFinanceWidget extends Controller
     public function index()
     {
         // load models
-		$this->load->model('setting/setting');
-		$this->mobbexConfig = new MobbexConfig($this->model_setting_setting);
+        $this->load->model('setting/setting');
+        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting);
 
         if(
             (!$this->mobbexConfig->active_product && $this->request->get['route'] == 'product/product') 
@@ -22,12 +22,12 @@ class ControllerExtensionModuleMobbexFinanceWidget extends Controller
             return;
         }
 
-		//Init sdk classes
-		\MobbexSdk::init($this->mobbexConfig);
+        //Init sdk classes
+        \MobbexSdk::init($this->mobbexConfig);
 
         $data = [
-            'price'   => $this->getPrice($this->request->get['route']),
-            'sources' => \Mobbex\Repository::getSources($this->getPrice($this->request->get['route'])),
+            'price'   => $this->getPrice(),
+            'sources' => \Mobbex\Repository::getSources($this->getPrice()),
 			'theme'   => 'light',
             'button'  => [
                 'custom_styles' => $this->mobbexConfig->button_styles,
@@ -41,15 +41,13 @@ class ControllerExtensionModuleMobbexFinanceWidget extends Controller
     }
 
     /**
-     * Calculates the price to show in widget.
-     * 
-     * @param string $route
+     * Returns the price to show in the financial widget based in the actual route.
      * 
      * @return float
      */
-    public function getPrice($route)
+    public function getPrice()
     {
-        if($route == 'product/product'){
+        if($this->request->get['route'] == 'product/product'){
 
             $this->load->model('catalog/product');
             $product = $this->model_catalog_product->getProduct((int)$this->request->get['product_id']);
