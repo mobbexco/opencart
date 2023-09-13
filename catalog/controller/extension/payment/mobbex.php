@@ -3,6 +3,8 @@
 require_once DIR_SYSTEM . 'library/mobbex/config.php';
 require_once DIR_SYSTEM . 'library/mobbex/sdk.php';
 require_once DIR_SYSTEM . 'library/mobbex/logger.php';
+require_once DIR_SYSTEM . 'library/mobbex/transaction.php';
+
 
 class ControllerExtensionPaymentMobbex extends Controller
 {
@@ -125,21 +127,24 @@ class ControllerExtensionPaymentMobbex extends Controller
      */
     public function webhook()
     {
-        // load models and instance helper
+        // Load models
         $this->load->model('checkout/order');
         $this->load->language('extension/payment/mobbex');
         $this->load->model('setting/setting');
+
+        // Instance mobbex models
         $this->mobbexConfig = new MobbexConfig($this->model_setting_setting->getSetting('payment_mobbex'));
-        $this->logger = new MobbexLogger($this->mobbexConfig);
+        $this->logger       = new MobbexLogger($this->mobbexConfig);
+        $this->transaction  = new MobbexTransaction($this->registry);
 
-        //Init sdk classes
+        // Init sdk classes
         \MobbexSdk::init($this->mobbexConfig);
-        
 
-        // Get and validate received data
+        // Get data from query params
         $id            = $this->request->get['order_id'];
         $token         = $this->request->get['mobbex_token'];
         $data          = isset($_SERVER['CONTENT_TYPE']) && $_SERVER['CONTENT_TYPE'] == 'application/json' ? json_decode(file_get_contents('php://input'), true)['data'] : $this->request->post['data'];
+        $cartId        = $this->request->get['cart_id'];
         $mobbexVersion = MobbexConfig::$version;
 
         $this->logger->log('debug', "ControllerExtensionPaymentMobbex > webhook | Process Webhook", $data);
@@ -164,6 +169,12 @@ class ControllerExtensionPaymentMobbex extends Controller
 
         // Update order status
         $this->model_checkout_order->addOrderHistory($id, $orderStatus, $this->createOrderComment($data), $state == 'approved');
+
+        // Format transaction data
+        $trxData = $this->transaction->formatWebhookData($data, $cartId);
+
+        // Save formated data in mobbex transaction table
+        $this->transaction->saveTransaction($trxData);
     }
 
     /**
@@ -229,6 +240,21 @@ class ControllerExtensionPaymentMobbex extends Controller
     }
 
     /**
+     * Get cart_id from product
+     * 
+     * @return string $cartId
+     */
+
+    private function getCartId()
+    {
+        // Search cart_id in products
+        foreach ($this->cart->getProducts() as $product)
+            $cartId = $product['cart_id'];
+        
+        return $cartId;
+    }
+
+    /**
      * Get order customer data.
      * 
      * @param array $order
@@ -256,11 +282,13 @@ class ControllerExtensionPaymentMobbex extends Controller
      */
     private function getOrderEndpointUrl($order, $endpoint)
     {
+        // Crates an array with necesary query params
         $args = [
             'mobbex_token' => \Mobbex\Repository::generateToken(),
             'platform'     => 'opencart',
             'version'      => MobbexConfig::$version,
-            'order_id'     => $order['order_id']
+            'order_id'     => $order['order_id'],
+            'cart_id'      => $this->getCartId()
         ];
 
         //Add Xdebug as query if debug mode is active
