@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * MobbexConfig
+ * 
+ * A model to manage the options, configurations & info of the plugin.
+ * 
+ */
 class MobbexConfig
 {
     /** @var string */
@@ -34,5 +40,4 @@ class MobbexConfig
             $this->settings[$configKey] = $this->$configKey = $value;
         }
     }
-
 }

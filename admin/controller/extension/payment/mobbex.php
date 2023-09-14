@@ -32,12 +32,13 @@ class ControllerExtensionPaymentMobbex extends Controller
     }
 
     /**
-     * Create Mobbex tables in database.
+     * Create Mobbex tables in database and add dni field to customer form in checkout.
      * 
      * @return void 
      */
     public function install()
     {
+        // Create tables
         $this->db->query(
             "CREATE TABLE IF NOT EXISTS `" . DB_PREFIX  . "mobbex_transaction` (
                 `cart_id` INT(11) NOT NULL,
@@ -54,6 +55,9 @@ class ControllerExtensionPaymentMobbex extends Controller
                 `data` TEXT NOT NULL,
                 PRIMARY KEY (`id`));"
         );
+
+        // Add dni field
+        $this->installDniField();
     }
 
     /**
@@ -69,6 +73,8 @@ class ControllerExtensionPaymentMobbex extends Controller
         $data = [
             // Get global text translations
             'heading_title' => $this->language->get('heading_title'),
+            // Checks if current currency is supported by Mobbex
+            'ars_currency'  => $this->config->get('config_currency') == 'ARS',
 
             // Get template sections
             'header' 	    => $this->load->controller('common/header'),
@@ -99,12 +105,17 @@ class ControllerExtensionPaymentMobbex extends Controller
             'payment_mobbex_api_key'      => $this->getFormConfig('api_key'),
             'payment_mobbex_access_token' => $this->getFormConfig('access_token'),
             'payment_mobbex_debug_mode'   => $this->getFormConfig('debug_mode'),
+            'payment_mobbex_embed'        => $this->getFormConfig('embed'),
+            'payment_mobbex_multicard'    => $this->getFormConfig('multicard'),
 
+            // Labels
             'status_label'                 => $this->language->get('status'),
             'test_mode_label'              => $this->language->get('test_mode'),
             'api_key_label'                => $this->language->get('api_key'),
             'access_token_label'           => $this->language->get('access_token'),
             'debug_mode_label'             => $this->language->get('debug_mode'),
+            'embed_label'                  => $this->language->get('embed'),
+            'multicard_label'              => $this->language->get('multicard'),
 
             // Plugin extra data
             'plugin_version'              => \MobbexConfig::$version,
@@ -148,4 +159,46 @@ class ControllerExtensionPaymentMobbex extends Controller
 
         return $this->config->get("payment_mobbex_$config");
     }
+
+    /**
+     * Add dni field to customer form at checkout if there is none
+     * 
+     */
+    public function installDniField()
+    {
+        // Load model
+        $this->load->model('customer/custom_field');
+
+        // Create a query to the database
+        $query = $this->db->query("SELECT * FROM `" . DB_PREFIX . "custom_field_description` WHERE name = 'DNI'")->num_rows;
+        
+        // Check if an DNI custom field exists, otherwise set and creates it
+        if ($query != '0'){
+            return;
+        } else {
+            // Customize an array containing the information needed to create the field
+            $dniField = [
+                "value"      => "", 
+                "validation" => "",
+                "status"     => "1", 
+                "sort_order" => "5", 
+                "type"       => "text",
+                "location"   => "account",
+                "custom_field_description"    => [
+                    "1" => [ 
+                        "name" => "DNI" 
+                    ]
+                ],
+                "custom_field_customer_group" => [
+                    [
+                        "required"          => "1",
+                        "customer_group_id" => "1",
+                    ] 
+                ],
+            ];
+
+            // Add dni custom field
+            $this->model_customer_custom_field->addCustomField($dniField);
+        }
+    } 
 }
