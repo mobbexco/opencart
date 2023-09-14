@@ -197,7 +197,7 @@ class ControllerExtensionPaymentMobbex extends Controller
 
             $mobbexCheckout = new \Mobbex\Modules\Checkout(
                 $order['order_id'],
-                $order['total'],
+                $this->currency->format($order['total'], $order['currency_code'], $order['currency_value'], false),
                 $this->getOrderEndpointUrl($order, 'callback'),
                 $this->getOrderEndpointUrl($order, 'webhook'),
                 $this->getItems($order),
@@ -232,7 +232,7 @@ class ControllerExtensionPaymentMobbex extends Controller
                 'image'       => HTTPS_SERVER . 'image/' . $product['image'],
                 'quantity'    => $product['quantity'],
                 'description' => $product['name'],
-                'total'       => round($product['price'] * $order['currency_value'], 2),
+                'total'       => $this->currency->format($product['price'], $order['currency_code'], $order['currency_value'], false),
             ];
         }
 
