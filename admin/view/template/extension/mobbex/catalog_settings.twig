@@ -1,0 +1,82 @@
+<div id='tab-mobbex' class='tab-pane' style='display:none'>
+
+    <h2 class="text-left">{{mobbex_title}}</h2>
+    
+    <div class="mobbex-config">
+
+        <h3 class="text-left">{{plans_config_title}}</h3>
+
+        <table class="mbbx-plans-cont table-striped table-bordered table-hover">
+            <tbody>
+                <tr style="text-align: center;">
+                    <td>{{ common_plans_label }}</td>
+                    <td>{{ advanced_plans_label }}</td>
+                </tr>
+                <tr>
+                    <td class="mbbx-plans">
+                        {% for field in commonFields %}
+                            <div class="mbbx-plan">
+                                <input type="hidden" name="{{field['id']}}" value="no">
+                                <input type="checkbox" name="{{ field['id'] }}" {{ field['value'] ? 'checked="checked"' : '' }} id="{{ field['id'] }}">
+                                <label for="{{ field['id'] }}">{{ field['label'] }}</label>
+                            </div>
+                        {% endfor %}
+                    </td>
+                    <td class="mbbx-plans">
+                        {% for sourceRef, fields in advancedFields %}
+                            <div class="mbbx-plan-source">
+                                <img src="https://res.mobbex.com/images/sources/png/{{ sourceRef }}.png">
+                                <p>{{ sourceNames[sourceRef] }}</p>
+                            </div>
+                            {% for field in fields %}
+                                <div class="mbbx-plan-advanced">
+                                    <input type="checkbox" name="{{ field['id'] }}" {{ field['value'] ? 'checked="checked"' : '' }} id="{{ field['id'] }}">
+                                    <label for="{{ field['id'] }}">{{ field['label'] }}</label>
+                                </div>
+                            {% endfor %}
+                        {% endfor %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+    <style>
+        .mobbex-config {
+            margin-top: 50px;
+        }
+        .mbbx-plans-cont {
+            border: 1px gainsboro solid;
+            width: 500px;
+        }
+
+        .mbbx-plans-cont tbody {
+            vertical-align: top
+        }
+
+        .mbbx-plans-cont td {
+            width: 50%;
+            border: 1px gainsboro solid;
+            padding: 15px;
+        }
+
+        .mbbx-plans-cont label {
+            font-weight: 400 !important;
+        }
+
+        .mbbx-plan-advanced {
+            padding-left: 20px;
+        }
+
+        .mbbx-plan-source * {
+            display: inline;
+        }
+
+        .mbbx-plan-source img {
+            width: 30px;
+            border-radius: 100%;
+        }
+    </style>
+
+</div>

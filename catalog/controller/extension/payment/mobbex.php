@@ -20,7 +20,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         $this->load->model('setting/setting');
 
         $this->mobbexConfig = new MobbexConfig($this->registry);
-        $this->logger       = new MobbexLogger($this->mobbexConfig);
+        $this->logger       = new MobbexLogger($this->registry);
         $this->transaction  = new MobbexTransaction($this->registry);
 
         //Init sdk classes
@@ -163,10 +163,14 @@ class ControllerExtensionPaymentMobbex extends Controller
             $this->log->write($this->language->get('currency_error'));
         }
 
-        $common_plans = $advanced_plans = [];
+        //Get products ids
+        $products_ids = array_column($this->cart->getProducts(), 'product_id');
+
+        //Get products plans
+        extract($this->mobbexConfig->getProductsPlans($products_ids));
 
         try {
-
+            //Create Mobbex Checkout
             $mobbexCheckout = new \Mobbex\Modules\Checkout(
                 $order['order_id'],
                 $this->currency->format($order['total'], $order['currency_code'], $order['currency_value'], false),

@@ -11,6 +11,18 @@ class ControllerExtensionPaymentMobbex extends Controller
     /** Notices about tables creation */
     public $schemaNotices = [];
 
+    private $events = array(
+        'admin/view/catalog/product_form/after' => array(
+            'extension/mobbex/event/catalog/product_form_after'
+        ),
+        'admin/model/catalog/product/editProduct/after' => array(
+            'extension/mobbex/event/catalog/save_product_after'
+        ),
+        'admin/view/common/header/before' => array(
+            'extension/mobbex/event/script/add_scripts'
+        ),
+    );
+
     public function __construct()
     {
         parent::__construct(...func_get_args());
@@ -20,7 +32,6 @@ class ControllerExtensionPaymentMobbex extends Controller
         $this->load->language('extension/payment/mobbex');
         $this->mobbexConfig = new MobbexConfig($this->registry);
         $this->logger       = new MobbexLogger($this->registry);
-
 
         //Init sdk classes
         (new \MobbexSdk($this->registry))->init();
@@ -62,10 +73,17 @@ class ControllerExtensionPaymentMobbex extends Controller
             //Create the table
             $table = new \Mobbex\Model\Table($tableName, $definition);
 
+            //Show table warnings
+            foreach ($table->warning as $warning)
+                $this->schemaNotices['warning'][] = $warning;
+
             //Show alert in case of error
             if(!$table->result)
                 $this->schemaNotices['error'][] = str_replace('{TABLE}', $tableName, $this->language->get('error_table_creation'));
         }
+        
+        //Register Events
+        $this->registerEvents();
 
         // Add dni field
         $this->installDniField();
@@ -172,6 +190,19 @@ class ControllerExtensionPaymentMobbex extends Controller
             return $this->request->post["payment_mobbex_$config"];
 
         return $this->mobbexConfig->$config;
+    }
+
+    /**
+     * Register mobbex callbacks in opencart events.
+     */
+    public function registerEvents()
+    {
+        $this->load->model('setting/event');
+        $this->model_setting_event->deleteEventByCode('mobbex');
+        foreach ($this->events as $trigger => $actions) {
+            foreach ($actions as $action)
+                $this->model_setting_event->addEvent('mobbex', $trigger, $action);
+        }
     }
 
     /**
