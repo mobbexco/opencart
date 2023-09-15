@@ -21,7 +21,7 @@ class MobbexConfig extends Model
 
         //Set mobbex settings as properties
         $this->formatSettings('payment_mobbex');
-
+        $this->formatSettings('module_mobbex_finance_widget');
     }
 
     /**
@@ -29,10 +29,10 @@ class MobbexConfig extends Model
      * 
      * @param string $replace Config key to replace.
      */
-    public function formatSettings($replace)
+    private function formatSettings($replace)
     {
         foreach ($this->model_setting_setting->getSetting($replace) as $key => $value) {
-            $configKey = str_replace($replace.'_', '', $key);
+            $configKey = str_replace($replace . '_', '', $key);
             $this->settings[$configKey] = $this->$configKey = $value;
         }
     }
