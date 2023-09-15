@@ -95,9 +95,9 @@ class MobbexConfig extends Model
     {
         //get the categories
         $result = $this->db->query("SELECT category_id FROM " . DB_PREFIX . "product_to_category WHERE product_id = '" . (int)$product_id . "'");
-        
+
         //Return categories in an array
-        return array_map(function($item){return $item['category_id'];}, $result->rows);
+        return array_column($result->rows, 'category_id');
     }
 
     /**

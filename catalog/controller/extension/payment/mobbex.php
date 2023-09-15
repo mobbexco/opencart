@@ -124,7 +124,7 @@ class ControllerExtensionPaymentMobbex extends Controller
             return;
 
         //Get products ids
-        $products_ids = array_map(function($item){return $item['product_id'];}, $this->cart->getProducts());
+        $products_ids = array_column($this->cart->getProducts(), 'product_id');
 
         //Get products plans
         extract($this->mobbexConfig->getProductsPlans($products_ids));

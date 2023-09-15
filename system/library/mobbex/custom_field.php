@@ -7,13 +7,8 @@
  */
 class MobbexCustomField extends Model
 {
-    public function __construct($registry)
-    {
-        parent::__construct($registry);
-
-        $this->table = DB_PREFIX . "mobbex_custom_fields";
-    }
-
+    public $table = DB_PREFIX . "mobbex_custom_fields";
+    
     /**
      * Get a Mobbex custom field from db.
      * 
@@ -26,7 +21,7 @@ class MobbexCustomField extends Model
      */
     public function get($row_id, $object, $fieldName, $searchedColumn = 'data')
     {
-        $result = $this->db->query("SELECT * FROM " . DB_PREFIX . "mobbex_custom_fields WHERE row_id='$row_id' AND object='$object' AND field_name='$fieldName'");
+        $result = $this->db->query("SELECT * FROM $this->table WHERE row_id='$row_id' AND object='$object' AND field_name='$fieldName'");
 
         return !empty($result->rows[0][$searchedColumn]) ? $result->rows[0][$searchedColumn] : false;
     }
