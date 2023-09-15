@@ -1,1 +1,18 @@
-<a href="{{ mbbxUrl }}" name="mobbex-checkout" class="btn btn-primary pull-right">{{ textTitle }}</a>
+
+{# Payment button #}
+<a name="mobbex-checkout" id="mobbex-payment" class="btn btn-primary pull-right">{{ textTitle }}</a>
+
+{# Add embed script or redirect form #}
+{% if embed %}
+    <div id='mbbx-container'></div>
+    <script type="text/javascript" src="https://res.mobbex.com/js/embed/mobbex.embed@1.0.23.js"></script>
+{% else %}
+    <form id="mbbx_redirect_form" name="mobbexform" method="get"></form>
+{% endif %}
+
+{# Send mobbex data to javascript #}
+<script>
+    var mobbexData = {{ mobbexData }};
+</script>
+
+<script src="catalog/view/javascript/mobbex/payment.js"></script>

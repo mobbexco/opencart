@@ -26,8 +26,8 @@ class ControllerExtensionModuleMobbexFinanceWidget extends Controller
         (new \MobbexSdk($this->registry))->init();
 
         $data = [
-            'price'   => $this->getPrice($this->request->get['route']),
-            'sources' => \Mobbex\Repository::getSources($this->getPrice($this->request->get['route'])),
+            'price'   => $this->getPrice(),
+            'sources' => \Mobbex\Repository::getSources($this->getPrice()),
 			'theme'   => 'light',
             'button'  => [
                 'custom_styles' => $this->mobbexConfig->button_styles,
@@ -41,15 +41,13 @@ class ControllerExtensionModuleMobbexFinanceWidget extends Controller
     }
 
     /**
-     * Calculates the price to show in widget.
-     * 
-     * @param string $route
+     * Returns the price to show in the financial widget based in the actual route.
      * 
      * @return float
      */
-    public function getPrice($route)
+    public function getPrice()
     {
-        if($route == 'product/product'){
+        if($this->request->get['route'] == 'product/product'){
 
             $this->load->model('catalog/product');
             $product = $this->model_catalog_product->getProduct((int)$this->request->get['product_id']);

@@ -26,7 +26,6 @@ class MobbexConfig extends Model
 
         //Load classes
         $this->customField = new MobbexCustomField($registry);
-
     }
 
     /**
@@ -37,7 +36,7 @@ class MobbexConfig extends Model
     private function formatSettings($replace)
     {
         foreach ($this->model_setting_setting->getSetting($replace) as $key => $value) {
-            $configKey = str_replace($replace.'_', '', $key);
+            $configKey = str_replace($replace . '_', '', $key);
             $this->settings[$configKey] = $this->$configKey = $value;
         }
     }
@@ -123,5 +122,4 @@ class MobbexConfig extends Model
 
         return compact('common_plans', 'advanced_plans');
     }
-
 }
