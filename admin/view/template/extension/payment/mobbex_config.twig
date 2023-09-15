@@ -21,6 +21,20 @@
                 <button type="button" class="close" data-dismiss="alert">&times;</button>
             </div>
         {% endif %}
+        {# Database Schema Creation Errors #}
+        {% for alert in schema_notices.error %}
+            <div class="alert alert-danger">
+                <i class="fa fa-exclamation-circle"></i> {{ alert }}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        {% endfor %}
+        {# Database Schema Creation Warnings #}
+        {% for alert in schema_notices.warning %}
+            <div class="alert alert-warning">
+                <i class="fa fa-exclamation-circle"></i> {{ alert }}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+        {% endfor %}
     
         <div class="panel panel-default">
             {% if ars_currency == false %}
