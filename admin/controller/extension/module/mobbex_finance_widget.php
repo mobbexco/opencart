@@ -11,7 +11,7 @@ class ControllerExtensionModuleMobbexFinanceWidget extends Controller
         $this->load->model('setting/setting');
         $this->load->language('extension/mobbex/finance_widget');
         $this->document->setTitle($this->language->get('config_title'));
-        $this->mobbexConfig = new MobbexConfig($this->model_setting_setting);
+        $this->mobbexConfig = new MobbexConfig($this->registry);
 
         if ($this->request->server['REQUEST_METHOD'] == 'POST') {
             // Save configuration on post

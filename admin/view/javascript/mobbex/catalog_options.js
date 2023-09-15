@@ -2,8 +2,8 @@
 addEventListener("DOMContentLoaded", (event) => {
 
     //Get DOM elements
-    let nav           = document.querySelector("#form-product .nav-tabs");
-    let tabContent    = document.querySelector("#form-product .tab-content");
+    let nav           = document.querySelector(`#form-${catalogType} .nav-tabs`);
+    let tabContent    = document.querySelector(`#form-${catalogType} .tab-content`);
     let mobbexTab     = document.createElement('LI')
     let mobbexContent = document.querySelector("#tab-mobbex");
 

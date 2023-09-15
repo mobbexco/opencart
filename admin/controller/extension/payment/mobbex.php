@@ -13,10 +13,16 @@ class ControllerExtensionPaymentMobbex extends Controller
 
     private $events = array(
         'admin/view/catalog/product_form/after' => array(
-            'extension/mobbex/event/catalog/product_form_after'
+            'extension/mobbex/event/catalog/catalog_form_after'
+        ),
+        'admin/view/catalog/category_form/after' => array(
+            'extension/mobbex/event/catalog/catalog_form_after'
         ),
         'admin/model/catalog/product/editProduct/after' => array(
             'extension/mobbex/event/catalog/save_product_after'
+        ),
+        'admin/model/catalog/category/editCategory/after' => array(
+            'extension/mobbex/event/catalog/save_catalog_after'
         ),
         'admin/view/common/header/before' => array(
             'extension/mobbex/event/script/add_scripts'
