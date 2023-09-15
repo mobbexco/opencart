@@ -13,9 +13,9 @@ class MobbexConfig extends Model
     
     public $settings = array();
 
+
     public function __construct($registry)
     {
-
         parent::__construct($registry);
         $this->load->model('setting/setting');
 

@@ -17,4 +17,6 @@ $_ = [
     'access_token'      => 'Access Token',
     'test_mode'         => 'Test Mode',
     'debug_mode'        => 'Debug Mode',
+    'embed'             => 'Embed Mode',
+    'multicard'         => 'Multicard',
 ];

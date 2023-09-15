@@ -29,7 +29,7 @@ class MobbexSdk extends Model
             HTTPS_SERVER,
             [
                 'platform' => VERSION,
-                'sdk'      => class_exists('\Composer\InstalledVersions') ? \Composer\InstalledVersions::getVersion('mobbexco/php-plugins-sdk') : '',
+                'sdk'      => class_exists('\Composer\InstalledVersions') && \Composer\InstalledVersions::isInstalled('mobbexco/php-plugins-sdk') ? \Composer\InstalledVersions::getVersion('mobbexco/php-plugins-sdk') : '',
             ], 
             $this->mobbexConfig->settings, 
             null,
