@@ -7,11 +7,6 @@ $_ = [
     'text_mobbex'          => '<a href="https://mobbex.com" target="_blank"><img src="view/image/mobbex.png" alt="Mobbex" title="Mobbex" width="100px"/></a>',
     'success_save'         => 'Configuración modificada correctamente.',
     'error_permission'     => '¡No tienes permisos para modificar esta configuración!',
-    'config_title'         => 'Configuración de Mobbex',
-    'heading_title'        => 'Mobbex',
-    'text_mobbex'          => '<a href="https://mobbex.com" target="_blank"><img src="view/image/mobbex.png" alt="Mobbex" title="Mobbex" width="100px"/></a>',
-    'success_save'         => 'Configuración modificada correctamente.',
-    'error_permission'     => 'Warning: You do not have permission to modify this config!',
     'error_table_creation' => 'Error: La creación de la tabla {TABLE} falló!',
 
     'text_enabled'      => 'Activado',
@@ -22,4 +17,6 @@ $_ = [
     'access_token'      => 'Token de Acceso',
     'test_mode'         => 'Modo de Pruebas',
     'debug_mode'        => 'Modo Depuración',
+    'embed'             => 'Modo Embebido',
+    'multicard'         => 'Multicard',
 ];

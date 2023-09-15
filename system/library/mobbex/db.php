@@ -10,11 +10,6 @@ class MobbexDb extends Model
     /** DB Tables prefix */
     public $prefix = DB_PREFIX;
 
-    public function __construct($registry)
-    {
-        parent::__construct($registry);
-    }
-    
     /**
      * Executes a sql query & return the results.
      * 
