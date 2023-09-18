@@ -48,7 +48,6 @@ class ControllerExtensionPaymentMobbex extends Controller
             'textTitle'  => $this->language->get('text_title'),
             'embed'      => (bool) $this->mobbexConfig->settings['embed'],
             'mobbexData' => json_encode([
-                'settings'    => $this->mobbexConfig->settings,
                 'checkoutUrl' => $this->url->link("extension/payment/mobbex/checkout", '', true) . '&' . http_build_query(['order_id' => $orderId]),
                 'errorUrl'    => $this->url->link("extension/payment/mobbex/index", '', true),
                 'returnUrl'   => $this->getOrderEndpointUrl($order, 'callback'),
@@ -121,7 +120,7 @@ class ControllerExtensionPaymentMobbex extends Controller
 
         $this->logger->log('debug', "ControllerExtensionPaymentMobbex > webhook | Process Webhook", $data);
 
-        if (!\Mobbex\Repository::validateToken($token) || empty($id) || empty($data))
+        if (!\Mobbex\Repository::validateToken($token) || empty($id) || empty($data) || !isset($data['payment']))
             $this->logger->log('critical', "ControllerExtensionPaymentMobbex > webhook | WebHook Error: Empty ID, token or post body. v{$this->helper::$version}");
 
         // Get new order status
@@ -240,9 +239,9 @@ class ControllerExtensionPaymentMobbex extends Controller
     private function getCustomer($order)
     {
         return [
-            'identification' => $order['dni'],
-            'email'          => $order['email'],
-            'phone'          => $order['telephone'],
+            'identification' => isset($order['dni']) ? $order['dni'] : '',
+            'email'          => isset($order['email']) ? $order['email'] : '',
+            'phone'          => isset($order['telephone']) ? $order['telephone'] : '',
             'uid'            => $this->customer->getId(),
             'name'           => $order['payment_firstname'] . ' ' . $order['payment_lastname'],
         ];
