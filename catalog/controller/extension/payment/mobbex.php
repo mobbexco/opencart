@@ -35,7 +35,9 @@ class ControllerExtensionPaymentMobbex extends Controller
         
         // Sets dni field
         $order['dni'] = $this->getDni($order['custom_field']); 
-        if (!$order['dni']){
+
+        // Checks if there´s a logged customer and if it has dni
+        if ($this->customer->isLogged() && !$order['dni']){
             $link        = $this->url->link('account/edit');
             $dniRequired = $this->language->get('dni_required');
             $dniAlert    = $this->language->get('dni_alert');
