@@ -129,7 +129,7 @@ class ControllerExtensionModuleMobbexFinanceWidget extends Controller
             'button_styles_label'  => $this->language->get('button_styles_label'),
             
             // Plugin extra data
-            'plugin_version' => '1.0',
+            'plugin_version' => '2.0.0',
         ];
 
         // Return config view

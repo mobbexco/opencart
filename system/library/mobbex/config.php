@@ -11,7 +11,7 @@ require_once DIR_SYSTEM . 'library/mobbex/custom_field.php';
 class MobbexConfig extends Model
 {
     /** @var string */
-    public static $version = '1.0.0';
+    public static $version = '2.0.0';
     
     public $settings = array();
 

@@ -28,18 +28,9 @@
                 <button type="button" class="close" data-dismiss="alert">&times;</button>
             </div>
         {% endfor %}
-        {# Database Schema Creation Warnings #}
-        {% for alert in schema_notices.warning %}
-            <div class="alert alert-warning">
-                <i class="fa fa-exclamation-circle"></i> {{ alert }}
-                <button type="button" class="close" data-dismiss="alert">&times;</button>
-            </div>
-        {% endfor %}
-    
+
+
         <div class="panel panel-default">
-            {% if ars_currency == false %}
-                <div class="alert alert-danger">{{ currency_error }}</div>
-            {% endif %}
             <div class="panel-heading">
                 <h3 class="panel-title"><i class="fa fa-pencil"></i>Edit Mobbex</h3>
             </div>
