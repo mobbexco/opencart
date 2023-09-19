@@ -1,12 +1,8 @@
 jQuery(function ($) {
-
-    //Load mobbex spinner
-    renderLock();
-
   //Event payment button
   $("#mobbex-payment").on("click", () => {
     //Open Mobbex checkout
-    createCheckout((response) => !!parseInt(mobbexData.settings.embed) ? embedPayment(response) : redirectToCheckout(response));
+    createCheckout((response) => !!mobbexEmbed ? embedPayment(response) : redirectToCheckout(response));
   });
 
   /**

@@ -13,6 +13,7 @@
 {# Send mobbex data to javascript #}
 <script>
     var mobbexData = {{ mobbexData }};
+    var mobbexEmbed = {{ (embed) ? 1 : 0 }};
 </script>
 
-<script src="catalog/view/javascript/mobbex/payment.js"></script>
+<script src="view/javascript/mobbex/payment.js"></script>
