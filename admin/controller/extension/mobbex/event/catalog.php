@@ -6,6 +6,11 @@ require_once DIR_SYSTEM . 'library/mobbex/logger.php';
 
 class ControllerExtensionMobbexEventCatalog extends controller {
 
+    /** @var array */
+    public $config_views = [
+        'multivendor',
+    ];
+
     public function __construct()
     {
         parent::__construct(...func_get_args());
@@ -46,22 +51,27 @@ class ControllerExtensionMobbexEventCatalog extends controller {
         //Get plans configurations
         $sources = $this->getCatalogSources($id, $catalogType);
 
+        // Get Configs
+        $configs = [
+            'catalogType' => $catalogType,
+            'vendor_uid'  => $this->mobbexConfig->getCatalogOptions($id, 'vendor_uid' , $catalogType),
+        ];
+
         //Get translations
         $translations = [
             'mobbex_title'         => $this->language->get('mobbex_title'),
             'plans_config_title'   => $this->language->get('plans_config_title'),
             'common_plans_label'   => $this->language->get('common_plans_label'),
             'advanced_plans_label' => $this->language->get('advanced_plans_label'),
+            'multivendor_title'    => $this->language->get('multivendor_title'),
+            'multivendor_label'    => $this->language->get('multivendor_label'),
         ];
 
         //Set template data
-        $templateData = array_merge($sources, $translations, ['catalogType' => $catalogType]);
-
-        //Load mobbex product options template
-        $snippet = $this->load->view('extension/mobbex/catalog_settings', $templateData);
+        $templateData = array_merge($sources, $translations, $configs);
 
         // Insert the snippet after the output
-        $output = str_replace('</body>', $snippet . '</body>', $output);
+        $output = str_replace('</body>', $this->getConfigTemplate($templateData) . '</body>', $output);
     }
 
     /**
@@ -100,6 +110,7 @@ class ControllerExtensionMobbexEventCatalog extends controller {
         $configs = [
             'common_plans'   => serialize($commonPlans),
             'advanced_plans' => serialize($advancedPlans),
+            'vendor_uid'     => isset($data[1]['mbbx-multivendor']) ? $data[1]['mbbx-multivendor'] : '',
         ];
 
         //Save mobbex configs in custom fields
@@ -133,5 +144,35 @@ class ControllerExtensionMobbexEventCatalog extends controller {
             return ['commonFields' => [], 'advancedFields' => [], 'sourceNames' => []];
 
         }
+    }
+
+    /**
+     * Returns the mobbex configs template for catalog admin page.
+     * 
+     * @param array $data
+     * 
+     * @return string
+     */
+    public function getConfigTemplate($data) {
+        // Get the base template
+        $template = $this->load->view('extension/mobbex/catalog/template', $data);
+
+        //Add plans filter
+        $template = str_replace('<!--PLANS-->', $this->load->view("extension/mobbex/catalog/plans_filter", $data), $template);
+
+        //Prepare configs template
+        $configs = "";
+
+        //Get configs templates
+        foreach ($this->config_views as $view){
+            //Add multivendor options only in multivendor mode
+            if($view === 'multivendor' && !$this->mobbexConfig->multivendor)
+                continue;
+
+            //Add the config view
+            $configs .= $this->load->view("extension/mobbex/catalog/$view", $data);
+        }
+
+        return str_replace('<!--CONFIGS-->', $configs, $template);
     }
 }
