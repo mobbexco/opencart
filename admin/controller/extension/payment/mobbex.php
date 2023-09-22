@@ -19,7 +19,7 @@ class ControllerExtensionPaymentMobbex extends Controller
             'extension/mobbex/event/catalog/catalog_form_after'
         ),
         'admin/model/catalog/product/editProduct/after' => array(
-            'extension/mobbex/event/catalog/save_product_after'
+            'extension/mobbex/event/catalog/save_catalog_after'
         ),
         'admin/model/catalog/category/editCategory/after' => array(
             'extension/mobbex/event/catalog/save_catalog_after'
