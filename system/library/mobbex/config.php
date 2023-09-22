@@ -88,6 +88,30 @@ class MobbexConfig extends Model
     }
 
     /**
+     * Get the vendor uid asigned to a product.
+     * 
+     * @param string $id
+     * 
+     * @return string
+     */
+    public function getProductVendor($id)
+    {
+        if(!$this->multivendor)
+            return '';
+
+        //Get entity from product
+        if ($this->getCatalogOptions($id, 'vendor_uid'))
+            return $this->getCatalogOptions($id, 'vendor_uid');
+
+        //get entity from categories
+        foreach ($this->getProdCategories($id) as $categoryId)
+            if ($this->getCatalogOptions($categoryId, 'vendor_uid', 'category'))
+                return $this->getCatalogOptions($categoryId, 'vendor_uid', 'category');
+
+        return '';
+    }
+
+    /**
      * Get product categories id from product id.
      * 
      * @param string $product_id
