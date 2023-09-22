@@ -138,6 +138,7 @@ class ControllerExtensionPaymentMobbex extends Controller
             'payment_mobbex_debug_mode'   => $this->getFormConfig('debug_mode'),
             'payment_mobbex_embed'        => $this->getFormConfig('embed'),
             'payment_mobbex_multicard'    => $this->getFormConfig('multicard'),
+            'payment_mobbex_multivendor'  => $this->getFormConfig('multivendor'),
 
             // Labels
             'status_label'                 => $this->language->get('status'),
@@ -147,6 +148,9 @@ class ControllerExtensionPaymentMobbex extends Controller
             'debug_mode_label'             => $this->language->get('debug_mode'),
             'embed_label'                  => $this->language->get('embed'),
             'multicard_label'              => $this->language->get('multicard'),
+            'multivendor_label'            => $this->language->get('multivendor'),
+            'text_unified'                 => $this->language->get('multivendor_unified'),
+            'text_active'                  => $this->language->get('multivendor_active'),
 
             // Plugin extra data
             'plugin_version'              => \MobbexConfig::$version,
