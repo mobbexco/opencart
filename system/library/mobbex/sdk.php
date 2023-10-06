@@ -26,6 +26,7 @@ class MobbexSdk extends Model
         \Mobbex\Platform::init(
             'opencart',
             MobbexConfig::$version,
+            MobbexConfig::EMBED_VERSION,
             HTTPS_SERVER,
             [
                 'platform' => VERSION,

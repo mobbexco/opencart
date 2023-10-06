@@ -5,7 +5,7 @@
 {# Add embed script or redirect form #}
 {% if embed %}
     <div id='mbbx-container'></div>
-    <script type="text/javascript" src="https://res.mobbex.com/js/embed/mobbex.embed@1.1.0.js"></script>
+    <script type="text/javascript" src="https://res.mobbex.com/js/embed/mobbex.embed@{{ embedVersion }}.js"></script>
 {% else %}
     <form id="mbbx_redirect_form" name="mobbexform" method="get"></form>
 {% endif %}

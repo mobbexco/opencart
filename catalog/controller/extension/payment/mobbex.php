@@ -47,9 +47,10 @@ class ControllerExtensionPaymentMobbex extends Controller
 
         //Assign data to template
         $data = [
-            'textTitle'  => $this->language->get('text_title'),
-            'embed'      => (bool) $this->mobbexConfig->settings['embed'],
-            'mobbexData' => json_encode([
+            'textTitle'    => $this->language->get('text_title'),
+            'embed'        => (bool) $this->mobbexConfig->settings['embed'],
+            'embedVersion' => MobbexConfig::EMBED_VERSION,
+            'mobbexData'   => json_encode([
                 'checkoutUrl' => $this->url->link("extension/payment/mobbex/checkout", '', true) . '&' . http_build_query(['order_id' => $orderId]),
                 'errorUrl'    => $this->url->link("extension/payment/mobbex/index", '', true),
                 'returnUrl'   => $this->getOrderEndpointUrl($order, 'callback'),
