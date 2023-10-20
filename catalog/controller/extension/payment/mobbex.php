@@ -2,6 +2,7 @@
 
 require_once DIR_SYSTEM . 'library/mobbex/config.php';
 require_once DIR_SYSTEM . 'library/mobbex/sdk.php';
+require_once DIR_SYSTEM . 'library/mobbex/checkout.php';
 require_once DIR_SYSTEM . 'library/mobbex/logger.php';
 require_once DIR_SYSTEM . 'library/mobbex/transaction.php';
 
@@ -11,6 +12,12 @@ class ControllerExtensionPaymentMobbex extends Controller
     /** @var MobbexConfig */
     public static $mobbexConfig;
 
+    /** @var MobbexLogger */
+    public static $mobbexLogger;
+
+    /** @var MobbexCheckout */
+    public static $mobbexCheckout;
+
     public function __construct()
     {
         parent::__construct(...func_get_args());
@@ -19,9 +26,10 @@ class ControllerExtensionPaymentMobbex extends Controller
         $this->load->language('extension/payment/mobbex');
         $this->load->model('setting/setting');
 
-        $this->mobbexConfig = new MobbexConfig($this->registry);
-        $this->logger       = new MobbexLogger($this->registry);
-        $this->transaction  = new MobbexTransaction($this->registry);
+        $this->mobbexConfig   = new MobbexConfig($this->registry);
+        $this->logger         = new MobbexLogger($this->registry);
+        $this->mobbexCheckout = new MobbexCheckout($this->registry);
+        $this->transaction    = new MobbexTransaction($this->registry);
 
         //Init sdk classes
         (new \MobbexSdk($this->registry))->init();
@@ -34,7 +42,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         $order   = $this->model_checkout_order->getOrder($orderId);
         
         // Sets dni field
-        $order['dni'] = $this->getDni($order['custom_field']); 
+        $order['dni'] = $this->mobbexCheckout->getDni($order['custom_field']); 
 
         // Checks if there´s a logged customer and if it has dni
         if ($this->customer->isLogged() && !$order['dni']){
@@ -52,7 +60,7 @@ class ControllerExtensionPaymentMobbex extends Controller
             'mobbexData' => json_encode([
                 'checkoutUrl' => $this->url->link("extension/payment/mobbex/checkout", '', true) . '&' . http_build_query(['order_id' => $orderId]),
                 'errorUrl'    => $this->url->link("extension/payment/mobbex/index", '', true),
-                'returnUrl'   => $this->getOrderEndpointUrl($order, 'callback'),
+                'returnUrl'   => $this->mobbexCheckout->getOrderEndpointUrl($order, 'callback'),
             ]),
         ];
 
@@ -70,7 +78,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         $order   = $this->model_checkout_order->getOrder($orderId);
 
         //Get checkout
-        $checkout = $this->getCheckout($order);
+        $checkout = $this->mobbexCheckout->getCheckout($order);
 
         $this->response->addHeader('Content-Type: application/json');
         $this->response->setOutput(json_encode($checkout->response));
@@ -151,158 +159,6 @@ class ControllerExtensionPaymentMobbex extends Controller
     }
 
     /**
-     * Get Mobbex checkout.
-     * 
-     * @param mixed $order
-     * 
-     * @return mixed
-     */
-    private function getCheckout($order)
-    {
-        // Check currency support
-        if (!in_array($order['currency_code'], ['ARS', 'ARG'])){
-            $this->log->write($this->language->get('currency_error'));
-        }
-
-        //Get products ids
-        $products_ids = array_column($this->cart->getProducts(), 'product_id');
-
-        //Get products plans
-        extract($this->mobbexConfig->getProductsPlans($products_ids));
-
-        try {
-            //Create Mobbex Checkout
-            $mobbexCheckout = new \Mobbex\Modules\Checkout(
-                $order['order_id'],
-                $this->currency->format($order['total'], $order['currency_code'], $order['currency_value'], false),
-                $this->getOrderEndpointUrl($order, 'callback'),
-                $this->getOrderEndpointUrl($order, 'webhook'),
-                $this->getItems($order),
-                \Mobbex\Repository::getInstallments($this->cart->getProducts(), $common_plans, $advanced_plans),
-                $this->getCustomer($order),
-                $this->getAddresses($order),
-                'all',
-                'mobbexCheckoutRequest'
-            );
-
-        } catch (\Mobbex\Exception $e) {
-            $this->logger->log('debug', "Helper Mobbex > getCheckoutFromQuote | Checkout Response: ", $mobbexCheckout->response);
-            return false;
-        }
-
-        return $mobbexCheckout;
-    }
-
-    /**
-     * Get order product items.
-     * 
-     * @param mixed $order
-     * 
-     * @return array
-     */
-    private function getItems($order)
-    {
-        $items = [];
-
-        foreach ($this->cart->getProducts() as $product) {
-            $items[] = [
-                'image'       => HTTPS_SERVER . 'image/' . $product['image'],
-                'quantity'    => $product['quantity'],
-                'description' => $product['name'],
-                'total'       => $this->currency->format($product['price'], $order['currency_code'], $order['currency_value'], false),
-            ];
-        }
-
-        return $items;
-    }
-
-    /**
-     * Get cart_id from product
-     * 
-     * @return string $cartId
-     */
-
-    private function getCartId()
-    {
-        // Search cart_id in products
-        foreach ($this->cart->getProducts() as $product)
-            $cartId = $product['cart_id'];
-        
-        return $cartId;
-    }
-
-    /**
-     * Get order customer data.
-     * 
-     * @param array $order
-     * 
-     * @return array
-     */
-    private function getCustomer($order)
-    {
-        return [
-            'identification' => isset($order['dni']) ? $order['dni'] : '',
-            'email'          => isset($order['email']) ? $order['email'] : '',
-            'phone'          => isset($order['telephone']) ? $order['telephone'] : '',
-            'uid'            => $this->customer->getId(),
-            'name'           => $order['payment_firstname'] . ' ' . $order['payment_lastname'],
-        ];
-    }
-
-    /**
-     * Get order endpoint URLs.
-     * 
-     * @param array $order
-     * @param string $endpoint
-     * 
-     * @return string
-     */
-    private function getOrderEndpointUrl($order, $endpoint)
-    {
-        // Crates an array with necesary query params
-        $args = [
-            'mobbex_token' => \Mobbex\Repository::generateToken(),
-            'platform'     => 'opencart',
-            'version'      => MobbexConfig::$version,
-            'order_id'     => $order['order_id'],
-            'cart_id'      => $this->getCartId()
-        ];
-
-        //Add Xdebug as query if debug mode is active
-        if ($this->mobbexConfig->debug_mode)
-            $args['XDEBUG_SESSION_START'] = 'PHPSTORM';
-
-        return $this->url->link("extension/payment/mobbex/$endpoint", '', true) . '&' . http_build_query($args);
-    }
-
-    /**
-     * Get Addresses data for Mobbex Checkout.
-     * 
-     * @param mixed $order
-     * 
-     * @return array $addresses
-     */
-    public function getAddresses($order)
-    {
-        $addresses = [];
-
-        foreach (['payment' => 'billing', 'shipping' => 'shipping'] as $key => $type) {
-            $street = isset($order[$key.'_address_1']) ? $order[$key.'_address_1'] : '';
-            $addresses[] = [
-                'type'         => $type,
-                'country'      => isset($order[$key.'_iso_code_3']) ? $order[$key.'_iso_code_3'] : '',
-                'street'       => trim(preg_replace('/(\D{0})+(\d*)+$/', '', trim($street))),
-                'streetNumber' => str_replace(preg_replace('/(\D{0})+(\d*)+$/', '', trim($street)), '', trim($street)),
-                'streetNotes'  => '',
-                'zipCode'      => isset($order[$key.'_postcode']) ? $order[$key.'_postcode'] : '',
-                'city'         => isset($order[$key.'_city']) ? $order[$key.'_city'] : '',
-                'state'        => isset($order[$key.'_zone_code']) ? $this->getStateCode($order[$key.'_zone']) : '',
-            ];
-        }
-        return $addresses;
-    }
-
-    /**
      * Create order comment from Mobbex webhook post data.
      * 
      * @param array $data
@@ -335,80 +191,6 @@ class ControllerExtensionPaymentMobbex extends Controller
             [$date, $paymentId, $paymentTotal, $paymentMethod, $installments, $riskAnalysis, $entityUid], 
             $this->language->get('order_comment')
         );
-    }
-
-    /**
-     * Get customer DNI.
-     * 
-     * @param array  $customFields
-     * 
-     * @return string $value DNI value
-     * 
-     */
-    private function getDni($customFields)
-    {
-        if (!$customFields)
-            return '';
-        
-        $dniField = $this->getDniValue($customFields);
-
-        return $dniField;
-    }
-
-    /**
-     *  Find DNI custom field and get its value
-     * 
-     * @param array  $customFields
-     * 
-     * @return string $value DNI value
-     * 
-     */
-    public function getDniValue($customFields)
-    {
-        foreach ($customFields as $key => $value)
-            // Find the custom field with DNI name
-            $name = $this->db->query("SELECT name FROM `" . DB_PREFIX . "custom_field_description` WHERE custom_field_id = " . $key . ";")->row['name'];
-            if ($name == 'DNI')
-                // Gets DNI value from DNI custom field
-                return $value;
-    }
-
-    /**
-     * Return the code for a given state.
-     * 
-     * @param string $state State name.
-     * 
-     * @return string
-     */
-    public function getStateCode($state)
-    {
-        $states = [
-            "Distrito Federal" => 'C',
-            "Bueno Aires"      => 'B',
-            "Catamarca"        => 'K',
-            "Chaco"            => 'H',
-            "Chubut"           => 'U',
-            "Córdoba"          => 'X',
-            "Entre Rios"       => 'E',
-            "Formosa"          => 'P',
-            "Jujuy"            => 'Y',
-            "La Pampa"         => 'L',
-            "La Rioja"         => 'F',
-            "Mendoza"          => 'M',
-            "Misiones"         => 'N',
-            "Neuquén"          => 'Q',
-            "Río Negro"        => 'R',
-            "Salta"            => 'A',
-            "San Juan"         => 'J',
-            "San Luis"         => 'D',
-            "Santa Cruz"       => 'Z',
-            "Sante Fe"         => 'S',
-            "Sante del Estero" => 'G',
-            "Tierra del fuego" => 'V',
-            "Tucumán"          => 'T',
-        ];
-
-        return isset($states[$state]) ? $states[$state] : '';
     }
 
     /**

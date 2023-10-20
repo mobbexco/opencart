@@ -1,6 +1,15 @@
 jQuery(function ($) {
+  let currentMethod = '';
+
   //Event payment button
   $("#mobbex-payment").on("click", () => {
+    let methods = document.querySelectorAll('.mobbex-method');
+
+    methods.forEach(method => {
+      if(method.checked)
+        return currentMethod = method.getAttribute('data-mobbex');
+    });
+
     //Open Mobbex checkout
     createCheckout((response) => !!mobbexEmbed ? embedPayment(response) : redirectToCheckout(response));
   });
@@ -30,9 +39,11 @@ jQuery(function ($) {
    * @param object response
    */
   function embedPayment(response) {
+
     var options = {
       id: response.id,
       type: "checkout",
+      paymentMethod: currentMethod ?? null,
 
       onResult: (data) => {
         location.href = mobbexData.returnUrl + "&status=" + data.status.code;
@@ -58,7 +69,23 @@ jQuery(function ($) {
    * @param object response
    */
   function redirectToCheckout(response) {
+    //Get checkout redirect form
+    let mobbexForm = $("#mbbx_redirect_form");
+
+    //add checkout url to action
     $("#mbbx_redirect_form").attr("action", response.url);
-    $("#mbbx_redirect_form").submit();
+    $("#mbbx_redirect_form").attr("method", 'get');
+
+    //Add current method
+    if(currentMethod !== ''){
+      let method = document.createElement('input');
+      method.setAttribute('type', 'hidden');
+      method.setAttribute('name', 'paymentMethod');
+      method.setAttribute('value', currentMethod);
+      $("#mbbx_redirect_form").append(method);
+    }
+
+    //Submit form to open checkout
+    mobbexForm.submit();
   }
 });

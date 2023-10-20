@@ -19,4 +19,6 @@ $_ = [
     'debug_mode'        => 'Debug Mode',
     'embed'             => 'Embed Mode',
     'multicard'         => 'Multicard',
+    'methods'           => 'Payment Methods Subdivision',
+    'methods_icon'      => 'Show Payment Methods Icons',
 ];

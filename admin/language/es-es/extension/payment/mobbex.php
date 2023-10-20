@@ -19,4 +19,6 @@ $_ = [
     'debug_mode'        => 'Modo Depuración',
     'embed'             => 'Modo Embebido',
     'multicard'         => 'Multicard',
+    'methods'           => 'Subdivisión de Métodos de Pago',
+    'methods_icon'      => 'Mostrar Iconos en Métodos de Pago',
 ];
