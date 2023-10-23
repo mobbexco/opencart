@@ -26,8 +26,8 @@ class MobbexSdk extends Model
         \Mobbex\Platform::init(
             'opencart',
             MobbexConfig::$version,
-            MobbexConfig::EMBED_VERSION,
             HTTPS_SERVER,
+            MobbexConfig::EMBED_VERSION,
             [
                 'platform' => VERSION,
                 'sdk'      => class_exists('\Composer\InstalledVersions') && \Composer\InstalledVersions::isInstalled('mobbexco/php-plugins-sdk') ? \Composer\InstalledVersions::getVersion('mobbexco/php-plugins-sdk') : '',
