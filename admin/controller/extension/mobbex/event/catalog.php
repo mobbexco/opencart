@@ -69,9 +69,18 @@ class ControllerExtensionMobbexEventCatalog extends controller {
 
         //Set template data
         $templateData = array_merge($sources, $translations, $configs);
+        
+        //add templates
+        $templateData['templates'] = [
+                'plans_filter' => $this->load->view('extension/mobbex/catalog/plans_filter', $templateData),
+                'multivendor'  => $this->load->view('extension/mobbex/catalog/multivendor', $templateData),
+        ];
+
+        // Get the base template
+        $template = $this->load->view('extension/mobbex/catalog/settings', $templateData);
 
         // Insert the snippet after the output
-        $output = str_replace('</body>', $this->getConfigTemplate($templateData) . '</body>', $output);
+        $output = str_replace('</body>', $template . '</body>', $output);
     }
 
     /**
@@ -144,35 +153,5 @@ class ControllerExtensionMobbexEventCatalog extends controller {
             return ['commonFields' => [], 'advancedFields' => [], 'sourceNames' => []];
 
         }
-    }
-
-    /**
-     * Returns the mobbex configs template for catalog admin page.
-     * 
-     * @param array $data
-     * 
-     * @return string
-     */
-    public function getConfigTemplate($data) {
-        // Get the base template
-        $template = $this->load->view('extension/mobbex/catalog/template', $data);
-
-        //Add plans filter
-        $template = str_replace('<!--PLANS-->', $this->load->view("extension/mobbex/catalog/plans_filter", $data), $template);
-
-        //Prepare configs template
-        $configs = "";
-
-        //Get configs templates
-        foreach ($this->config_views as $view){
-            //Add multivendor options only in multivendor mode
-            if($view === 'multivendor' && !$this->mobbexConfig->multivendor)
-                continue;
-
-            //Add the config view
-            $configs .= $this->load->view("extension/mobbex/catalog/$view", $data);
-        }
-
-        return str_replace('<!--CONFIGS-->', $configs, $template);
     }
 }
