@@ -210,6 +210,7 @@ class ControllerExtensionPaymentMobbex extends Controller
                 'quantity'    => $product['quantity'],
                 'description' => $product['name'],
                 'total'       => $this->currency->format($product['price'], $order['currency_code'], $order['currency_value'], false),
+                'entity'      => $this->mobbexConfig->getProductVendor($product['product_id']),
             ];
         }
 
