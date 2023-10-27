@@ -12,6 +12,8 @@ class MobbexConfig extends Model
 {
     /** @var string */
     public static $version = '2.0.0';
+
+    const EMBED_VERSION = '1.1.0';
     
     public $settings = array();
 
