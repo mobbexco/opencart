@@ -146,6 +146,7 @@ class ControllerExtensionPaymentMobbex extends Controller
             'payment_mobbex_multicard'    => $this->getFormConfig('multicard'),
             'payment_mobbex_methods'      => $this->getFormConfig('methods'),
             'payment_mobbex_methods_icon' => $this->getFormConfig('methods_icon'),
+            'payment_mobbex_wallet'       => $this->getFormConfig('wallet'),
 
             // Labels
             'status_label'                 => $this->language->get('status'),
@@ -157,6 +158,7 @@ class ControllerExtensionPaymentMobbex extends Controller
             'multicard_label'              => $this->language->get('multicard'),
             'methods_label'                => $this->language->get('methods'),
             'methods_icon_label'           => $this->language->get('methods_icon'),
+            'wallet_label'                 => $this->language->get('wallet'),
 
             // Plugin extra data
             'plugin_version'              => \MobbexConfig::$version,
