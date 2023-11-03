@@ -52,7 +52,6 @@ class MobbexCheckout extends Model
                 $this->getOrderEndpointUrl($order, 'webhook'),
                 $this->getItems($currency),
                 \Mobbex\Repository::getInstallments($this->cart->getProducts(), $common_plans, $advanced_plans),
-                \Mobbex\Repository::getInstallments($this->cart->getProducts(), $common_plans, $advanced_plans),
                 $order ? $this->getCustomerFromOrder($order) : [],
                 $order ? $this->getAddressesFromOrder($order) : [],
                 $order ? 'all' : 'none',

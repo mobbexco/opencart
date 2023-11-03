@@ -78,7 +78,7 @@ class ControllerExtensionMobbexEventPayment extends controller
                 //Add icon
                 $output = str_replace($method['title'], "<img src='{$method['icon']}' style='width:35px;border-radius:100%;margin-right:5px;background-color:#6f00ff;'>{$method['title']}", $output);
                 //center icon
-                $output = str_replace('<label>    <input type="radio" class="mobbex-method"', '<label style="display:flex;align-items:center;"><input type="radio" class="mobbex-method"', $output);
+                $output = str_replace('<label>', '<label style="display:flex;align-items:center;">', $output);
             }
         }
 
