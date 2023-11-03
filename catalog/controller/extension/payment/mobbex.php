@@ -52,11 +52,24 @@ class ControllerExtensionPaymentMobbex extends Controller
             // Displays a button that redirects to customer account edit
             return $this->load->view('extension/mobbex/dni_required', compact('link', 'dniRequired', 'dniAlert'));
         }
+        
+        //Add wallet cards
+        $cards = array();
+
+        if($this->mobbexConfig->wallet) {
+            foreach ($this->session->data['payment_methods'] as $key => $card)
+                if(strpos($key, 'wallet'))
+                    $cards[$key] = $card;
+        }
 
         //Assign data to template
         $data = [
             'textTitle'  => $this->language->get('text_title'),
+            'cardInst'   => $this->language->get('wallet_card_installment'),
+            'cardCode'   => $this->language->get('wallet_card_code'),
             'embed'      => (bool) $this->mobbexConfig->settings['embed'],
+            'cards'      => $cards,
+            'wallet'     => (bool) $this->mobbexConfig->wallet && $this->customer->isLogged(),
             'mobbexData' => json_encode([
                 'checkoutUrl' => $this->url->link("extension/payment/mobbex/checkout", '', true) . '&' . http_build_query(['order_id' => $orderId]),
                 'errorUrl'    => $this->url->link("extension/payment/mobbex/index", '', true),

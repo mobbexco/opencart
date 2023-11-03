@@ -8,5 +8,8 @@ $_ = [
     'currency_error'   => 'Caution: remember to verify that the configured currency supported by Mobbex (ARS)',
     'callback_error' => 'The transaction could not be validated. Contact your site administrator',
     'token_error'    => 'Invalid Mobbex token. Contact your site administrator',
-    'order_comment'  => "{date}\nPayment ID: {paymentID}\nTotal Amount: {paymentTotal}\nPayment Method: {paymentMethod} {installments}\nRisk Analysis: {riskAnalysis}\nCupon URL: https://mobbex.com/console/{entityUID}/operations/?oid={paymentID}"
+    'order_comment'  => "{date}\nPayment ID: {paymentID}\nTotal Amount: {paymentTotal}\nPayment Method: {paymentMethod} {installments}\nRisk Analysis: {riskAnalysis}\nCupon URL: https://mobbex.com/console/{entityUID}/operations/?oid={paymentID}",
+
+    'wallet_card_code'        => "Security Code:",
+    'wallet_card_installment' => "Installment:",
 ];
