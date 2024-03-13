@@ -19,7 +19,7 @@ class ControllerExtensionPaymentMobbex extends Controller
             'extension/mobbex/event/catalog/catalog_form_after'
         ),
         'admin/model/catalog/product/editProduct/after' => array(
-            'extension/mobbex/event/catalog/save_product_after'
+            'extension/mobbex/event/catalog/save_catalog_after'
         ),
         'admin/model/catalog/category/editCategory/after' => array(
             'extension/mobbex/event/catalog/save_catalog_after'
@@ -146,6 +146,7 @@ class ControllerExtensionPaymentMobbex extends Controller
             'payment_mobbex_multicard'    => $this->getFormConfig('multicard'),
             'payment_mobbex_methods'      => $this->getFormConfig('methods'),
             'payment_mobbex_methods_icon' => $this->getFormConfig('methods_icon'),
+            'payment_mobbex_multivendor'  => $this->getFormConfig('multivendor'),
 
             // Labels
             'status_label'                 => $this->language->get('status'),
@@ -157,6 +158,9 @@ class ControllerExtensionPaymentMobbex extends Controller
             'multicard_label'              => $this->language->get('multicard'),
             'methods_label'                => $this->language->get('methods'),
             'methods_icon_label'           => $this->language->get('methods_icon'),
+            'multivendor_label'            => $this->language->get('multivendor'),
+            'text_unified'                 => $this->language->get('multivendor_unified'),
+            'text_active'                  => $this->language->get('multivendor_active'),
 
             // Plugin extra data
             'plugin_version'              => \MobbexConfig::$version,

@@ -112,7 +112,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         if ($status > 1 && $status < 400) {
             $this->response->redirect($this->url->link('checkout/success'));
         } else {
-            $this->response->redirect($this->url->link('checkout/failure'));
+            $this->response->redirect($this->url->link('checkout/checkout'));
         }
     }
 
@@ -156,6 +156,159 @@ class ControllerExtensionPaymentMobbex extends Controller
 
         // Save formated data in mobbex transaction table
         $this->transaction->saveTransaction($trxData);
+    }
+
+    /**
+     * Get Mobbex checkout.
+     * 
+     * @param mixed $order
+     * 
+     * @return mixed
+     */
+    private function getCheckout($order)
+    {
+        // Check currency support
+        if (!in_array($order['currency_code'], ['ARS', 'ARG'])){
+            $this->log->write($this->language->get('currency_error'));
+        }
+
+        //Get products ids
+        $products_ids = array_column($this->cart->getProducts(), 'product_id');
+
+        //Get products plans
+        extract($this->mobbexConfig->getProductsPlans($products_ids));
+
+        try {
+            //Create Mobbex Checkout
+            $mobbexCheckout = new \Mobbex\Modules\Checkout(
+                $order['order_id'],
+                $this->currency->format($order['total'], $order['currency_code'], $order['currency_value'], false),
+                $this->getOrderEndpointUrl($order, 'callback'),
+                $this->getOrderEndpointUrl($order, 'webhook'),
+                $this->getItems($order),
+                \Mobbex\Repository::getInstallments($this->cart->getProducts(), $common_plans, $advanced_plans),
+                $this->getCustomer($order),
+                $this->getAddresses($order),
+                'all',
+                'mobbexCheckoutRequest'
+            );
+
+        } catch (\Mobbex\Exception $e) {
+            $this->logger->log('debug', "Helper Mobbex > getCheckoutFromQuote | Checkout Response: ", $mobbexCheckout->response);
+            return false;
+        }
+
+        return $mobbexCheckout;
+    }
+
+    /**
+     * Get order product items.
+     * 
+     * @param mixed $order
+     * 
+     * @return array
+     */
+    private function getItems($order)
+    {
+        $items = [];
+
+        foreach ($this->cart->getProducts() as $product) {
+            $items[] = [
+                'image'       => HTTPS_SERVER . 'image/' . $product['image'],
+                'quantity'    => $product['quantity'],
+                'description' => $product['name'],
+                'total'       => $this->currency->format($product['price'], $order['currency_code'], $order['currency_value'], false),
+                'entity'      => $this->mobbexConfig->getProductVendor($product['product_id']),
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * Get cart_id from product
+     * 
+     * @return string $cartId
+     */
+
+    private function getCartId()
+    {
+        // Search cart_id in products
+        foreach ($this->cart->getProducts() as $product)
+            $cartId = $product['cart_id'];
+        
+        return $cartId;
+    }
+
+    /**
+     * Get order customer data.
+     * 
+     * @param array $order
+     * 
+     * @return array
+     */
+    private function getCustomer($order)
+    {
+        return [
+            'identification' => isset($order['dni']) ? $order['dni'] : '',
+            'email'          => isset($order['email']) ? $order['email'] : '',
+            'phone'          => isset($order['telephone']) ? $order['telephone'] : '',
+            'uid'            => $this->customer->getId(),
+            'name'           => $order['payment_firstname'] . ' ' . $order['payment_lastname'],
+        ];
+    }
+
+    /**
+     * Get order endpoint URLs.
+     * 
+     * @param array $order
+     * @param string $endpoint
+     * 
+     * @return string
+     */
+    private function getOrderEndpointUrl($order, $endpoint)
+    {
+        // Crates an array with necesary query params
+        $args = [
+            'mobbex_token' => \Mobbex\Repository::generateToken(),
+            'platform'     => 'opencart',
+            'version'      => MobbexConfig::$version,
+            'order_id'     => $order['order_id'],
+            'cart_id'      => $this->getCartId()
+        ];
+
+        //Add Xdebug as query if debug mode is active
+        if ($this->mobbexConfig->debug_mode)
+            $args['XDEBUG_SESSION_START'] = 'PHPSTORM';
+
+        return $this->url->link("extension/payment/mobbex/$endpoint", '', true) . '&' . http_build_query($args);
+    }
+
+    /**
+     * Get Addresses data for Mobbex Checkout.
+     * 
+     * @param mixed $order
+     * 
+     * @return array $addresses
+     */
+    public function getAddresses($order)
+    {
+        $addresses = [];
+
+        foreach (['payment' => 'billing', 'shipping' => 'shipping'] as $key => $type) {
+            $street = isset($order[$key.'_address_1']) ? $order[$key.'_address_1'] : '';
+            $addresses[] = [
+                'type'         => $type,
+                'country'      => isset($order[$key.'_iso_code_3']) ? $order[$key.'_iso_code_3'] : '',
+                'street'       => trim(preg_replace('/(\D{0})+(\d*)+$/', '', trim($street))),
+                'streetNumber' => str_replace(preg_replace('/(\D{0})+(\d*)+$/', '', trim($street)), '', trim($street)),
+                'streetNotes'  => '',
+                'zipCode'      => isset($order[$key.'_postcode']) ? $order[$key.'_postcode'] : '',
+                'city'         => isset($order[$key.'_city']) ? $order[$key.'_city'] : '',
+                'state'        => isset($order[$key.'_zone_code']) ? $this->getStateCode($order[$key.'_zone']) : '',
+            ];
+        }
+        return $addresses;
     }
 
     /**

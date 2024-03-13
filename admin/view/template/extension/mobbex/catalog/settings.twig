@@ -1,0 +1,30 @@
+<div id='tab-mobbex' class='tab-pane' style='display:none'>
+
+    <h2 class="text-left">{{mobbex_title}}</h2>
+    
+    <div class="mobbex-config">
+
+        {{templates.plans_filter}}
+
+        <div>
+            {{templates.multivendor}}
+        </div>
+
+    </div>
+
+    <style>
+
+        .mobbex-config {
+            margin: 50px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+    </style>
+
+    <script>
+        var catalogType = "{{catalogType}}";
+    </script>
+
+</div>
