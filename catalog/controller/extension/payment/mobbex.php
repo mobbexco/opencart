@@ -104,7 +104,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         if ($status > 1 && $status < 400) {
             $this->response->redirect($this->url->link('checkout/success'));
         } else {
-            $this->response->redirect($this->url->link('checkout/failure'));
+            $this->response->redirect($this->url->link('checkout/checkout'));
         }
     }
 
