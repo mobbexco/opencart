@@ -9,7 +9,7 @@ class ControllerExtensionModuleMobbexFinanceWidget extends Controller
     {
         // load models and instance helper
         $this->load->model('setting/setting');
-        $this->load->language('extension/mobbex/finance_widget');
+        $this->load->language('extension/module/mobbex_finance_widget');
         $this->document->setTitle($this->language->get('config_title'));
         $this->mobbexConfig = new MobbexConfig($this->registry);
 
