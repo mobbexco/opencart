@@ -1,6 +1,17 @@
 jQuery(function ($) {
   let currentMethod = '';
 
+  //Get wallet cards inputs
+  const cardsInputs = document.querySelectorAll('.mobbex-card');
+
+  //If a card is checked show card form in checkout.
+  if(cardsInputs) {
+    cardsInputs.forEach(card => {
+      if(card.checked)
+        document.querySelector(`#mobbex_${card.getAttribute('data-mobbex')}`).classList.toggle('hidden');
+    });
+  }
+
   //Event payment button
   $("#mobbex-payment").on("click", () => {
     let methods = document.querySelectorAll('.mobbex-method');
@@ -10,8 +21,13 @@ jQuery(function ($) {
         return currentMethod = method.getAttribute('data-mobbex');
     });
 
-    //Open Mobbex checkout
-    createCheckout((response) => !!mobbexEmbed ? embedPayment(response) : redirectToCheckout(response));
+    if ($('[name=payment_method]:checked').attr('data-mobbex').includes('wallet_card')) {
+      //Execute Wallet
+      createCheckout((response) => executeWallet(response));
+    } else {
+      //Open Mobbex checkout
+      createCheckout((response) => !!mobbexEmbed ? embedPayment(response) : redirectToCheckout(response));
+    }
   });
 
   /**
@@ -87,5 +103,30 @@ jQuery(function ($) {
 
     //Submit form to open checkout
     mobbexForm.submit();
+  }
+
+ /**
+ * Execute wallet payment from selected card.
+ * 
+ * @param {array} response Mobbex checkout response.
+ */
+  function executeWallet(response) {
+    let cardId      = $('[name=payment_method]:checked').attr('data-mobbex') ?? null;
+    let cardNumber  = $(`#mobbex_${cardId}_number`).val();
+    let updatedCard = response.wallet.find(card => card.card.card_number == cardNumber);
+  
+    var options = {
+      intentToken: updatedCard.it,
+      installment: $(`#mobbex_${cardId}_installments`).val(),
+      securityCode: $(`#mobbex_${cardId}_code`).val()
+    };
+
+    window.MobbexJS.operation.process(options).then(data => {
+      if (data.result === true) {
+        location.href = mobbexData.returnUrl + '&status=' + data.data.status.code;
+      } else {
+        location.href = mobbexData.returnUrl + "&status=500";
+      }
+    }).catch(error => alert(error));
   }
 });

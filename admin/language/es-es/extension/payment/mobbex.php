@@ -9,8 +9,8 @@ $_ = [
     'error_permission'     => '¡No tienes permisos para modificar esta configuración!',
     'error_table_creation' => 'Error: La creación de la tabla {TABLE} falló!',
 
-    'text_enabled'      => 'Activado',
-    'text_disabled'     => 'Desactivado',
+    'text_enabled'         => 'Activado',
+    'text_disabled'        => 'Desactivado',
 
     'status'              => 'Estado',
     'api_key'             => 'Clave de API',
@@ -24,4 +24,5 @@ $_ = [
     'multivendor_unified' => 'Unificado',
     'methods'             => 'Subdivisión de Métodos de Pago',
     'methods_icon'        => 'Mostrar Iconos en Métodos de Pago',
+    'wallet'              => 'Usar Mobbex Wallet para usauarios loggeados.',
 ];

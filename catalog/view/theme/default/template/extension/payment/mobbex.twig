@@ -1,3 +1,28 @@
+{# Wallet Form #}
+{% if wallet %}
+    {% for key, card in cards %}
+        <div id="{{ key }}" class="hidden mbbx-form-card">
+            <div class="mbbx-card-title">
+                <img class="mbbx-card-icon" src="{{ card.icon }}">
+                <h2>{{card.title}}</h2>
+            </div>
+            <hr>
+            <div class="mbbx-card-form-container">
+                <label for="{{ key }}_installments">{{cardInst}}</label>
+                <select required id="{{ key }}_installments">
+                    {% for installment in card.installments %}
+                        <option value="{{ installment.reference }}">{{ installment.name }} ({{ installment.totals.installment.count }} cuota/s de ${{ installment.totals.installment.amount }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mbbx-card-form-container">
+                <label for="{{ key }}_code">{{cardCode}}</label>
+                <input type="password" name="securityCode" maxlength="{{ card.maxLength }}" placeholder="{{ card.placeholder }}" id="{{ key }}_code" required>
+            </div>
+            <input type="hidden" name="cardNumber" value="{{ card.cardNumber }}" id="{{ key }}_number">
+        </div>
+    {% endfor %}
+{% endif %}
 
 {# Payment button #}
 <a name="mobbex-checkout" id="mobbex-payment" class="btn btn-primary pull-right">{{ textTitle }}</a>
@@ -10,10 +35,58 @@
     <form id="mbbx_redirect_form" name="mobbexform" method="get"></form>
 {% endif %}
 
+{% if wallet %}
+    <script type="text/javascript" src="https://res.mobbex.com/js/sdk/mobbex@1.1.0.js"></script>
+{% endif %}
+
 {# Send mobbex data to javascript #}
 <script>
-    var mobbexData = {{ mobbexData }};
-    var mobbexEmbed = {{ (embed) ? 1 : 0 }};
+    var mobbexData   = {{ mobbexData }};
+    var mobbexEmbed  = {{ (embed) ? 1 : 0 }};
+    var mobbexWallet = {{ (wallet) ? 1 : 0 }};
 </script>
 
 <script src="catalog/view/javascript/mobbex/payment.js"></script>
+
+<style>
+    .mbbx-form-card {
+        border: 1px solid #6f00ff;
+        border-radius: 5px;
+        padding: 30px;
+        margin-bottom: 20px;
+    }
+
+    .mbbx-form-card hr {
+        color: #6f00ff;
+    }
+
+    .mbbx-card-title {
+        display: flex;
+        align-items: center;
+    }
+
+    .mbbx-card-title h2 {
+        margin: 0;
+    }
+
+    .mbbx-card-icon {
+        width:50px;
+        border-radius:100%;
+        margin-right:10px;
+    }
+
+    .mbbx-card-form-container {
+        padding: 10px;
+        font-size: 17px;
+    }
+
+    .mbbx-card-form-container label {
+        font-size: 17px;
+        margin-right: 10px;
+    }
+
+    .mbbx-card-form-container input[type="password"] {
+        width: 10%;
+    }
+
+</style>

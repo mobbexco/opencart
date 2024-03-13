@@ -24,4 +24,5 @@ $_ = [
     'multivendor_unified' => 'Unified',
     'methods'           => 'Payment Methods Subdivision',
     'methods_icon'      => 'Show Payment Methods Icons',
+    'wallet'            => 'Use Mobbex Wallet for logged users',
 ];
