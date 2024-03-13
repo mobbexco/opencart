@@ -22,4 +22,6 @@ $_ = [
     'multivendor'         => 'Multivendor',
     'multivendor_active'  => 'Active',
     'multivendor_unified' => 'Unified',
+    'methods'           => 'Payment Methods Subdivision',
+    'methods_icon'      => 'Show Payment Methods Icons',
 ];

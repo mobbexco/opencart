@@ -2,6 +2,7 @@
 
 require_once DIR_SYSTEM . 'library/mobbex/config.php';
 require_once DIR_SYSTEM . 'library/mobbex/sdk.php';
+require_once DIR_SYSTEM . 'library/mobbex/checkout.php';
 require_once DIR_SYSTEM . 'library/mobbex/logger.php';
 require_once DIR_SYSTEM . 'library/mobbex/transaction.php';
 
@@ -11,6 +12,12 @@ class ControllerExtensionPaymentMobbex extends Controller
     /** @var MobbexConfig */
     public static $mobbexConfig;
 
+    /** @var MobbexLogger */
+    public static $mobbexLogger;
+
+    /** @var MobbexCheckout */
+    public static $mobbexCheckout;
+
     public function __construct()
     {
         parent::__construct(...func_get_args());
@@ -19,9 +26,10 @@ class ControllerExtensionPaymentMobbex extends Controller
         $this->load->language('extension/payment/mobbex');
         $this->load->model('setting/setting');
 
-        $this->mobbexConfig = new MobbexConfig($this->registry);
-        $this->logger       = new MobbexLogger($this->registry);
-        $this->transaction  = new MobbexTransaction($this->registry);
+        $this->mobbexConfig   = new MobbexConfig($this->registry);
+        $this->logger         = new MobbexLogger($this->registry);
+        $this->mobbexCheckout = new MobbexCheckout($this->registry);
+        $this->transaction    = new MobbexTransaction($this->registry);
 
         //Init sdk classes
         (new \MobbexSdk($this->registry))->init();
@@ -34,7 +42,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         $order   = $this->model_checkout_order->getOrder($orderId);
         
         // Sets dni field
-        $order['dni'] = $this->getDni($order['custom_field']); 
+        $order['dni'] = $this->mobbexCheckout->getDni($order['custom_field']); 
 
         // Checks if there´s a logged customer and if it has dni
         if ($this->customer->isLogged() && !$order['dni']){
@@ -52,7 +60,7 @@ class ControllerExtensionPaymentMobbex extends Controller
             'mobbexData' => json_encode([
                 'checkoutUrl' => $this->url->link("extension/payment/mobbex/checkout", '', true) . '&' . http_build_query(['order_id' => $orderId]),
                 'errorUrl'    => $this->url->link("extension/payment/mobbex/index", '', true),
-                'returnUrl'   => $this->getOrderEndpointUrl($order, 'callback'),
+                'returnUrl'   => $this->mobbexCheckout->getOrderEndpointUrl($order, 'callback'),
             ]),
         ];
 
@@ -70,7 +78,7 @@ class ControllerExtensionPaymentMobbex extends Controller
         $order   = $this->model_checkout_order->getOrder($orderId);
 
         //Get checkout
-        $checkout = $this->getCheckout($order);
+        $checkout = $this->mobbexCheckout->getCheckout($order);
 
         $this->response->addHeader('Content-Type: application/json');
         $this->response->setOutput(json_encode($checkout->response));
@@ -336,80 +344,6 @@ class ControllerExtensionPaymentMobbex extends Controller
             [$date, $paymentId, $paymentTotal, $paymentMethod, $installments, $riskAnalysis, $entityUid], 
             $this->language->get('order_comment')
         );
-    }
-
-    /**
-     * Get customer DNI.
-     * 
-     * @param array  $customFields
-     * 
-     * @return string $value DNI value
-     * 
-     */
-    private function getDni($customFields)
-    {
-        if (!$customFields)
-            return '';
-        
-        $dniField = $this->getDniValue($customFields);
-
-        return $dniField;
-    }
-
-    /**
-     *  Find DNI custom field and get its value
-     * 
-     * @param array  $customFields
-     * 
-     * @return string $value DNI value
-     * 
-     */
-    public function getDniValue($customFields)
-    {
-        foreach ($customFields as $key => $value)
-            // Find the custom field with DNI name
-            $name = $this->db->query("SELECT name FROM `" . DB_PREFIX . "custom_field_description` WHERE custom_field_id = " . $key . ";")->row['name'];
-            if ($name == 'DNI')
-                // Gets DNI value from DNI custom field
-                return $value;
-    }
-
-    /**
-     * Return the code for a given state.
-     * 
-     * @param string $state State name.
-     * 
-     * @return string
-     */
-    public function getStateCode($state)
-    {
-        $states = [
-            "Distrito Federal" => 'C',
-            "Bueno Aires"      => 'B',
-            "Catamarca"        => 'K',
-            "Chaco"            => 'H',
-            "Chubut"           => 'U',
-            "Córdoba"          => 'X',
-            "Entre Rios"       => 'E',
-            "Formosa"          => 'P',
-            "Jujuy"            => 'Y',
-            "La Pampa"         => 'L',
-            "La Rioja"         => 'F',
-            "Mendoza"          => 'M',
-            "Misiones"         => 'N',
-            "Neuquén"          => 'Q',
-            "Río Negro"        => 'R',
-            "Salta"            => 'A',
-            "San Juan"         => 'J',
-            "San Luis"         => 'D',
-            "Santa Cruz"       => 'Z',
-            "Sante Fe"         => 'S',
-            "Sante del Estero" => 'G',
-            "Tierra del fuego" => 'V',
-            "Tucumán"          => 'T',
-        ];
-
-        return isset($states[$state]) ? $states[$state] : '';
     }
 
     /**

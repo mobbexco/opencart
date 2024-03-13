@@ -27,6 +27,12 @@ class ControllerExtensionPaymentMobbex extends Controller
         'admin/view/common/header/before' => array(
             'extension/mobbex/event/script/add_scripts'
         ),
+        'catalog/view/checkout/payment_method/before' => array(
+            'extension/mobbex/event/payment/get_methods'
+        ),
+        'catalog/view/checkout/payment_method/after' => array(
+            'extension/mobbex/event/payment/validate_methods'
+        ),
     );
 
     public function __construct()
@@ -138,6 +144,8 @@ class ControllerExtensionPaymentMobbex extends Controller
             'payment_mobbex_debug_mode'   => $this->getFormConfig('debug_mode'),
             'payment_mobbex_embed'        => $this->getFormConfig('embed'),
             'payment_mobbex_multicard'    => $this->getFormConfig('multicard'),
+            'payment_mobbex_methods'      => $this->getFormConfig('methods'),
+            'payment_mobbex_methods_icon' => $this->getFormConfig('methods_icon'),
             'payment_mobbex_multivendor'  => $this->getFormConfig('multivendor'),
 
             // Labels
@@ -148,6 +156,8 @@ class ControllerExtensionPaymentMobbex extends Controller
             'debug_mode_label'             => $this->language->get('debug_mode'),
             'embed_label'                  => $this->language->get('embed'),
             'multicard_label'              => $this->language->get('multicard'),
+            'methods_label'                => $this->language->get('methods'),
+            'methods_icon_label'           => $this->language->get('methods_icon'),
             'multivendor_label'            => $this->language->get('multivendor'),
             'text_unified'                 => $this->language->get('multivendor_unified'),
             'text_active'                  => $this->language->get('multivendor_active'),
